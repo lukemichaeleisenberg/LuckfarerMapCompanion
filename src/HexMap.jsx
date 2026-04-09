@@ -59,9 +59,9 @@ export default function HexMap() {
     setTerrain(prev => ({ ...prev, [key]: activeTerrain }))
   }
 
-  // grid.pixelWidth/Height account for origin:'topLeft', so no extra padding needed
-  const canvasWidth = grid.pixelWidth
-  const canvasHeight = grid.pixelHeight
+  // Add one hex-radius of padding so the rightmost/bottommost hexes aren't clipped
+  const canvasWidth = grid.pixelWidth + HEX_X_RADIUS
+  const canvasHeight = grid.pixelHeight + HEX_Y_RADIUS
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'center' }}>
