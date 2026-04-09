@@ -1,16 +1,45 @@
-# React + Vite
+# LuckfarerMapCompanion
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A browser-based fantasy hex map generator. Paint terrain on a 20x20 hex grid with neighbor-aware rendering (coastlines, mountain scaling), flood-fill region tracking, and per-user save/load via Supabase.
 
-Currently, two official plugins are available:
+## Dependencies
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+| Package | Role | Docs |
+|---|---|---|
+| [React 19](https://react.dev) | UI framework | https://react.dev/reference |
+| [Vite](https://vite.dev) | Dev server & bundler | https://vite.dev/guide |
+| [Konva](https://konvajs.org) | 2D canvas rendering | https://konvajs.org/docs |
+| [react-konva](https://github.com/konvajs/react-konva) | React bindings for Konva | https://github.com/konvajs/react-konva |
+| [honeycomb-grid](https://abbekeultjes.nl/honeycomb) | Hex grid math (coordinates, neighbors, traversal) | https://abbekeultjes.nl/honeycomb |
+| [Zustand](https://github.com/pmndrs/zustand) | Lightweight global state | https://docs.pmnd.rs/zustand |
+| [Supabase](https://supabase.com) | Auth & map storage (planned) | https://supabase.com/docs |
 
-## React Compiler
+## Setup
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Requires Node.js >= 18. If using nvm:
 
-## Expanding the ESLint configuration
+```bash
+nvm use 24
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Install dependencies:
+
+```bash
+npm install
+```
+
+## Running
+
+```bash
+npm run dev
+```
+
+Opens at http://localhost:5173
+
+Other scripts:
+
+```bash
+npm run build    # production build → dist/
+npm run preview  # serve the production build locally
+npm run lint     # ESLint
+```
