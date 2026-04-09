@@ -1,6 +1,6 @@
 # LuckfarerMapCompanion
 
-A browser-based fantasy hex map generator. Paint terrain on a 20x20 hex grid with neighbor-aware rendering (coastlines, mountain scaling), flood-fill region tracking, and per-user save/load via Supabase.
+Companion map generator for Luckfarer.
 
 ## Dependencies
 
