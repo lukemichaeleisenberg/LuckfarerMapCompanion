@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useRef, useEffect } from 'react'
 import { Stage, Layer, RegularPolygon } from 'react-konva'
 import { buildGrid, HEX_X_RADIUS, HEX_Y_RADIUS, HEX_SIZE } from '../hexGrid.js'
 import { BIOME_CATALOG, resolveBiome } from '../biomes.js'
@@ -9,6 +9,12 @@ export default function HexCanvas({ hexMap, onHexClick }) {
 
   const [hoveredBiome, setHoveredBiome] = useState(null)
   const [mousePos,     setMousePos]     = useState({ x: 0, y: 0 })
+  const stageRef = useRef(null)
+
+  useEffect(() => {
+    const container = stageRef.current?.getStage()?.container()
+    if (container) container.style.touchAction = 'pan-x pan-y'
+  }, [])
 
   const canvasWidth  = grid.pixelWidth  + HEX_X_RADIUS
   const canvasHeight = grid.pixelHeight + HEX_Y_RADIUS
@@ -19,7 +25,7 @@ export default function HexCanvas({ hexMap, onHexClick }) {
       onMouseMove={e => setMousePos({ x: e.clientX, y: e.clientY })}
     >
       <div style={{ width: 'fit-content', margin: '0 auto' }}>
-      <Stage width={canvasWidth} height={canvasHeight}>
+      <Stage ref={stageRef} width={canvasWidth} height={canvasHeight}>
         <Layer>
           {hexes.map(hex => {
             const key   = `${hex.q},${hex.r}`
