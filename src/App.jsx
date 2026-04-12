@@ -32,12 +32,12 @@ export default function App() {
     : (BIOME_LOOKUP[activePrimary]?.[activeSecondary] ?? 'grassland')
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column' }}>
+    <div className="app-layout">
 
       <Header activeBiome={activeBiome} />
 
       {/* ── Body ── */}
-      <div style={{ display: 'flex', alignItems: 'flex-start' }}>
+      <div className="app-body">
         <PalettePanel
           activePrimary={activePrimary}
           activeSecondary={activeSecondary}

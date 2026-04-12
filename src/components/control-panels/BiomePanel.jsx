@@ -7,14 +7,7 @@ const SORTED_BIOMES = Object.keys(BIOME_CATALOG).sort((a, b) =>
 
 export default function BiomePanel({ activeOther, onSelectOther }) {
   return (
-    <div style={{
-      width: 200,
-      flexShrink: 0,
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 14,
-      padding: '24px 16px 16px',
-    }}>
+    <div className="panel">
       <Section label="All Biomes">
         <TypeGrid
           types={SORTED_BIOMES}

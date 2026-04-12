@@ -30,14 +30,7 @@ export default function PalettePanel({ activePrimary, activeSecondary, activeOth
   ]
 
   return (
-    <div style={{
-      width: 200,
-      flexShrink: 0,
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 14,
-      padding: '24px 16px 16px',
-    }}>
+    <div className="panel">
       {sections.map(({ label, types, active, onSelect, catalog }) => (
         <Section key={label} label={label}>
           <TypeGrid types={types} active={active} onSelect={onSelect} catalog={catalog} />

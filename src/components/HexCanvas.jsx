@@ -15,9 +15,10 @@ export default function HexCanvas({ hexMap, onHexClick }) {
 
   return (
     <div
-      style={{ padding: 16, borderLeft: '1px solid #333', borderRight: '1px solid #333' }}
+      className="canvas-wrapper"
       onMouseMove={e => setMousePos({ x: e.clientX, y: e.clientY })}
     >
+      <div style={{ width: 'fit-content', margin: '0 auto' }}>
       <Stage width={canvasWidth} height={canvasHeight}>
         <Layer>
           {hexes.map(hex => {
@@ -46,6 +47,7 @@ export default function HexCanvas({ hexMap, onHexClick }) {
           })}
         </Layer>
       </Stage>
+      </div>
 
       {hoveredBiome && (
         <div style={{
