@@ -123,9 +123,24 @@ export const BIOME_STROKE = {
   underdark: '#0a0818',
 }
 
+// ─── Logic ───────────────────────────────────────────────────────────────────
+export function resolveBiome(hexState) {
+  if (hexState.mode === 'other') return hexState.type
+  return BIOME_LOOKUP[hexState.primary]?.[hexState.secondary] ?? 'grassland'
+}
+
 // Representative fill color for each primary/secondary type selector button
 export const TYPE_COLORS = {
   arctic: '#ddeeff', coast: '#3bb8cc', desert: '#d4b483', forest: '#2d6a2d',
   grassland: '#7ec850', mountain: '#9e9e9e', swamp: '#4a6b3d', sea: '#1a4fa0',
   hill: '#b0a870', wasteland: '#a08060',
 }
+
+// ─── Merged catalogs ──────────────────────────────────────────────────────────
+// Each entry: { name, color } — for biomes also includes stroke.
+export const TYPE_CATALOG = Object.fromEntries(
+  Object.keys(TYPE_NAMES).map(k => [k, { name: TYPE_NAMES[k], color: TYPE_COLORS[k] }])
+)
+export const BIOME_CATALOG = Object.fromEntries(
+  Object.keys(BIOME_NAMES).map(k => [k, { name: BIOME_NAMES[k], color: BIOME_COLORS[k], stroke: BIOME_STROKE[k] }])
+)
