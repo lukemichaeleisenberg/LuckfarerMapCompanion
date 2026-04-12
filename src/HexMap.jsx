@@ -100,7 +100,7 @@ export default function HexMap() {
         </h2>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 12, color: '#555' }}>painting</span>
+          <span style={{ fontSize: 12, color: '#555' }}>placing</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
             <span style={{
               display: 'inline-block',
@@ -133,9 +133,8 @@ export default function HexMap() {
           display: 'flex',
           flexDirection: 'column',
           gap: 14,
-          padding: 16,
-          borderRight: '1px solid #333',
-        }}>
+          padding: '24px 16px 16px',
+  }}>
           <Section label="Primary Type">
             <TypeGrid
               types={PRIMARY_TYPES}
@@ -168,7 +167,7 @@ export default function HexMap() {
         </div>
 
         {/* ── Hex grid ── */}
-        <div style={{ padding: 16 }}>
+        <div style={{ padding: 16, borderLeft: '1px solid #333', borderRight: '1px solid #333' }}>
           <Stage width={canvasWidth} height={canvasHeight}>
             <Layer>
               {hexes.map(hex => {
@@ -205,12 +204,11 @@ export default function HexMap() {
           display: 'flex',
           flexDirection: 'column',
           gap: 14,
-          padding: 16,
-          borderLeft: '1px solid #333',
-        }}>
+          padding: '24px 16px 16px',
+  }}>
           <Section label="All Biomes">
             <TypeGrid
-              types={Object.keys(BIOME_NAMES)}
+              types={Object.keys(BIOME_NAMES).sort((a, b) => BIOME_NAMES[a].localeCompare(BIOME_NAMES[b]))}
               active={activeOther}
               onSelect={selectOther}
               nameMap={BIOME_NAMES}
@@ -219,6 +217,26 @@ export default function HexMap() {
           </Section>
         </div>
 
+      </div>
+
+      {/* ── Footer ── */}
+      <div style={{
+        borderTop: '1px solid #333',
+        padding: '10px 20px',
+        background: '#1a1a2e',
+        fontSize: 12,
+        color: '#555',
+      }}>
+        <a
+          href="https://lukemichaeleisenberg.github.io/"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: '#778', textDecoration: 'none' }}
+          onMouseEnter={e => e.target.style.color = '#aab'}
+          onMouseLeave={e => e.target.style.color = '#778'}
+        >
+          lukemichaeleisenberg.github.io
+        </a>
       </div>
 
       {/* ── Hover tooltip ── */}
