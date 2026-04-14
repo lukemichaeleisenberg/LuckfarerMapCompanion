@@ -1,4 +1,4 @@
-import { BIOME_CATALOG } from '../../biomes.js'
+import { BIOME_CATALOG } from '../../core/biomes.js'
 import { Section, TypeGrid } from './Controls.jsx'
 
 const SORTED_BIOMES = Object.keys(BIOME_CATALOG).sort((a, b) =>

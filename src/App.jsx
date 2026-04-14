@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { BIOME_LOOKUP } from './biomes.js'
+import { BIOME_LOOKUP } from './core/biomes.js'
 import { useMapStore } from './store/mapStore.js'
 import HexCanvas from './components/HexCanvas.jsx'
 import PalettePanel from './components/control-panels/PalettePanel.jsx'
 import BiomePanel from './components/control-panels/BiomePanel.jsx'
 import Header from './components/Header.jsx'
 import Footer from './components/Footer.jsx'
+import GenerationDebug from './components/GenerationDebug.jsx'
 
 export default function App() {
   const hexMap = useMapStore(s => s.hexMap)
@@ -51,6 +52,8 @@ export default function App() {
 
         <BiomePanel activeOther={activeOther} onSelectOther={selectOther} />
       </div>
+
+      <GenerationDebug />
 
       <Footer />
 
