@@ -1,9 +1,7 @@
 import { BIOME_CATALOG } from '../core/biomes.js'
-import { useMapStore } from '../store/mapStore.js'
 
 export default function Header({ activeBiome }) {
-  const runGenerate = useMapStore(s => s.generateMap)
-
+  
   return (
     <div style={{
       display: 'flex',
@@ -24,26 +22,6 @@ export default function Header({ activeBiome }) {
       </h2>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-        <button
-          onClick={runGenerate}
-          style={{
-            padding: '5px 14px',
-            background: '#2a3a6a',
-            border: '1px solid #4a5a9a',
-            borderRadius: 5,
-            color: '#c8d8ff',
-            fontFamily: 'Georgia, serif',
-            fontSize: 13,
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            letterSpacing: '0.04em',
-          }}
-          onMouseEnter={e => { e.target.style.background = '#3a4a8a' }}
-          onMouseLeave={e => { e.target.style.background = '#2a3a6a' }}
-        >
-          Generate Map
-        </button>
-
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: 12, color: '#555' }}>placing</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
