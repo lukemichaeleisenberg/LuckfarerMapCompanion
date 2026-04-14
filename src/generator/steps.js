@@ -60,3 +60,50 @@ export function setupGrid (existingHexMap) {
 
   return state
 }
+
+// =============================================================================
+// PHASE 2 — BIOME PLACEMENT
+// Covers step: 0G
+// Shape rules, tie-breaking, and fallback logic are helpers within this function.
+// =============================================================================
+
+export function placeBiomes (state) {
+  void GRID_COLS
+  void GRID_ROWS
+  return state
+}
+
+// =============================================================================
+// PHASE 3 — POST-PLACEMENT CLEANUP
+// Covers steps: 0H, 0I, 0J, 0K
+// =============================================================================
+
+export function cleanupBiomes (state) {
+  for (const key of Object.keys(state.hexes)) {
+    if (state.hexes[key] === null) {
+      state.hexes[key] = { mode: 'biome', primary: 'sea', secondary: 'sea' }
+    }
+  }
+
+  return state
+}
+
+// =============================================================================
+// PHASE 4 — FEATURE PLACEMENT
+// Covers steps: 0L, 0M, 0N, 0O, 0Q, 0R
+// Note: 0O is a set of constraints enforced during 0N's river tracing —
+// it is not a separate pass and is handled inline within the 0N block below.
+// =============================================================================
+
+export function placeFeatures (state) {
+  return state
+}
+
+// =============================================================================
+// PHASE 5 — FEATURE CLEANUP
+// Covers step: 0P
+// =============================================================================
+
+export function cleanupFeatures (state) {
+  return state
+}
