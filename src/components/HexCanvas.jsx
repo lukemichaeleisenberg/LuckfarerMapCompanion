@@ -8,7 +8,7 @@ export default function HexCanvas({ hexMap, onHexClick }) {
   const hexes = useMemo(() => grid.toArray(), [grid])
 
   const [hoveredBiome, setHoveredBiome] = useState(null)
-  const [mousePos,     setMousePos]     = useState({ x: 0, y: 0 })
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
   const stageRef = useRef(null)
 
   useEffect(() => {
@@ -16,7 +16,7 @@ export default function HexCanvas({ hexMap, onHexClick }) {
     if (container) container.style.touchAction = 'pan-x pan-y'
   }, [])
 
-  const canvasWidth  = grid.pixelWidth  + HEX_X_RADIUS
+  const canvasWidth = grid.pixelWidth  + HEX_X_RADIUS
   const canvasHeight = grid.pixelHeight + HEX_Y_RADIUS
 
   return (
@@ -28,12 +28,12 @@ export default function HexCanvas({ hexMap, onHexClick }) {
       <Stage ref={stageRef} width={canvasWidth} height={canvasHeight}>
         <Layer>
           {hexes.map(hex => {
-            const key   = `${hex.q},${hex.r}`
+            const key = `${hex.q},${hex.r}`
             const state = hexMap[key]
-            const biome           = resolveBiome(state)
+            const biome = resolveBiome(state)
             const { color, stroke } = BIOME_CATALOG[biome]
-            const cx              = hex.x + HEX_X_RADIUS
-            const cy              = hex.y + HEX_Y_RADIUS
+            const cx = hex.x + HEX_X_RADIUS
+            const cy = hex.y + HEX_Y_RADIUS
             return (
               <RegularPolygon
                 key={key}

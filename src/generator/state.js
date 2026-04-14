@@ -38,30 +38,50 @@
  */
 
 /** Returns a fresh, empty MapGenState. */
-export function createState() {
+export function createState () {
   return {
     hexes: {},
     biomeGroupings: [],
-    headwaters: [],
+    headwaters: []
   }
 }
 
 /** Builds the 4 biome groupings with their coordinate modifiers and hex shapes. */
-export function buildBiomeGroupings() {
+export function buildBiomeGroupings () {
   const configs = [
-    [{ axis: 'x', delta:  0 },  4],
-    [{ axis: 'x', delta: -2 },  8],
-    [{ axis: 'y', delta: -2 }, 16],
-    [{ axis: 'y', delta:  0 }, 32],
+    [{ axis: 'x', offset: 0 }, 4],
+    [{ axis: 'x', offset: -2 }, 8],
+    [{ axis: 'y', offset: -2 }, 16],
+    [{ axis: 'y', offset: 0 }, 32]
   ]
   return configs.map(([coordinateModifier, base]) => ({
     coordinateModifier,
     primaryBiome: null,
     hexShapes: [
-      { secondary_biome: null, combined_biome: null, count: base,     shape: 'clump'   },
-      { secondary_biome: null, combined_biome: null, count: base,     shape: 'tendril' },
-      { secondary_biome: null, combined_biome: null, count: base,     shape: 'belt'    },
-      { secondary_biome: null, combined_biome: null, count: base + 1, shape: 'clump'   },
-    ],
+      {
+        secondary_biome: null,
+        combined_biome: null,
+        count: base,
+        shape: 'clump'
+      },
+      {
+        secondary_biome: null,
+        combined_biome: null,
+        count: base,
+        shape: 'tendril'
+      },
+      {
+        secondary_biome: null,
+        combined_biome: null,
+        count: base,
+        shape: 'belt'
+      },
+      {
+        secondary_biome: null,
+        combined_biome: null,
+        count: base + 1,
+        shape: 'clump'
+      }
+    ]
   }))
 }
