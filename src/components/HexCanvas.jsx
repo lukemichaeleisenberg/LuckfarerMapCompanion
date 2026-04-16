@@ -40,13 +40,13 @@ export default function HexCanvas({ hexMap, onHexClick }) {
                 x={cx} y={cy}
                 sides={6}
                 radius={HEX_SIZE}
-                rotation={30}
+                rotation={0}
                 fill={color}
                 stroke={stroke}
                 strokeWidth={1}
                 onClick={() => onHexClick(hex)}
                 onTap={() => onHexClick(hex)}
-                onMouseEnter={() => setHoveredHex({ q: hex.q, r: hex.r, biome })}
+                onMouseEnter={() => setHoveredHex({ col: hex.col, row: hex.row, biome })}
                 onMouseLeave={() => setHoveredHex(null)}
               />
             )
@@ -72,7 +72,7 @@ export default function HexCanvas({ hexMap, onHexClick }) {
             {BIOME_CATALOG[hoveredHex.biome].name}
           </span>
           <span className="hex-tooltip-coords">
-            {hoveredHex.q}, {hoveredHex.r}
+            {hoveredHex.col}, {hoveredHex.row}
           </span>
         </div>
       )}
