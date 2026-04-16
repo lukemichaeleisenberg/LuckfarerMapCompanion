@@ -10,16 +10,7 @@ export function isLight(hex) {
 export function Section({ label, children }) {
   return (
     <div>
-      <div style={{
-        fontSize: 10,
-        fontWeight: 'bold',
-        textTransform: 'uppercase',
-        letterSpacing: '0.08em',
-        color: '#555',
-        marginBottom: 5,
-      }}>
-        {label}
-      </div>
+      <div className="section-label">{label}</div>
       {children}
     </div>
   )
@@ -27,7 +18,7 @@ export function Section({ label, children }) {
 
 export function TypeGrid({ types, active, onSelect, catalog }) {
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+    <div className="type-grid">
       {types.map(t => {
         const { name, color } = catalog[t]
         const light    = isLight(color)
@@ -37,19 +28,11 @@ export function TypeGrid({ types, active, onSelect, catalog }) {
             key={t}
             title={name}
             onClick={() => onSelect(t)}
+            className={`type-grid-btn${isActive ? ' type-grid-btn--active' : ''}`}
             style={{
-              padding: '3px 7px',
               background: color,
-              border: isActive ? '2px solid #fff' : '2px solid rgba(0,0,0,0.25)',
-              borderRadius: 4,
               color: light ? '#222' : '#fff',
-              fontWeight: 'bold',
-              fontSize: 11,
-              cursor: 'pointer',
               textShadow: light ? 'none' : '0 1px 2px rgba(0,0,0,0.6)',
-              whiteSpace: 'nowrap',
-              outline: isActive ? '1px solid rgba(255,255,255,0.4)' : 'none',
-              outlineOffset: 1,
             }}
           >
             {name}

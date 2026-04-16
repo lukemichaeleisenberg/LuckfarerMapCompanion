@@ -24,7 +24,7 @@ export default function HexCanvas({ hexMap, onHexClick }) {
       className="canvas-wrapper"
       onMouseMove={e => setMousePos({ x: e.clientX, y: e.clientY })}
     >
-      <div style={{ width: 'fit-content', margin: '0 auto' }}>
+      <div className="canvas-center">
       <Stage ref={stageRef} width={canvasWidth} height={canvasHeight}>
         <Layer>
           {hexes.map(hex => {
@@ -56,29 +56,22 @@ export default function HexCanvas({ hexMap, onHexClick }) {
       </div>
 
       {hoveredHex && (
-        <div style={{
-          position: 'fixed',
-          left: mousePos.x + 14,
-          top: mousePos.y - 10,
-          background: 'rgba(10, 12, 20, 0.88)',
-          border: `1px solid ${BIOME_CATALOG[hoveredHex.biome].color}`,
-          borderRadius: 5,
-          padding: '4px 9px',
-          pointerEvents: 'none',
-          zIndex: 9999,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 6,
-        }}>
-          <span style={{
-            width: 10, height: 10, borderRadius: 2,
-            background: BIOME_CATALOG[hoveredHex.biome].color,
-            flexShrink: 0, display: 'inline-block',
-          }} />
-          <span style={{ fontSize: 12, color: '#e0d8c8', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
+        <div
+          className="hex-tooltip"
+          style={{
+            left: mousePos.x + 14,
+            top: mousePos.y - 10,
+            borderColor: BIOME_CATALOG[hoveredHex.biome].color,
+          }}
+        >
+          <span
+            className="swatch"
+            style={{ background: BIOME_CATALOG[hoveredHex.biome].color }}
+          />
+          <span className="hex-tooltip-name">
             {BIOME_CATALOG[hoveredHex.biome].name}
           </span>
-          <span style={{ fontSize: 11, color: '#8a8070', whiteSpace: 'nowrap' }}>
+          <span className="hex-tooltip-coords">
             {hoveredHex.q}, {hoveredHex.r}
           </span>
         </div>

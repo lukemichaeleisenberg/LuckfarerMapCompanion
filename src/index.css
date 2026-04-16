@@ -11,10 +11,34 @@ body {
   align-items: flex-start;
   min-height: 100vh;
   padding: 24px;
+  font-family: system-ui, sans-serif;
+  color: #ccc;
 }
 
 #root {
   width: 100%;
+}
+
+/* ── Shared ── */
+
+.serif {
+  font-family: Georgia, serif;
+}
+
+.swatch {
+  display: inline-block;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.muted {
+  color: #667;
+  font-size: 12px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
 }
 
 /* ── Layout ── */
@@ -45,6 +69,218 @@ body {
   flex-direction: column;
   gap: 14px;
   padding: 24px 16px 16px;
+}
+
+/* ── Header ── */
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  border-bottom: 1px solid #333;
+  background: #0f1120;
+}
+
+.header-title {
+  color: #e0d8c8;
+  font-family: Georgia, serif;
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: 0.02em;
+}
+
+.header-biome {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-biome .swatch {
+  width: 18px;
+  height: 18px;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.header-biome-name {
+  font-size: 14px;
+  color: #e0d8c8;
+  font-weight: bold;
+  font-family: Georgia, serif;
+}
+
+/* ── Footer ── */
+
+.footer {
+  border-top: 1px solid #333;
+  padding: 10px 20px;
+  background: #1a1a2e;
+  font-size: 12px;
+  color: #667;
+}
+
+.footer a {
+  color: #889;
+  text-decoration: none;
+}
+
+.footer a:hover {
+  color: #aab;
+}
+
+/* ── Hex tooltip ── */
+
+.hex-tooltip {
+  position: fixed;
+  background: rgba(10, 12, 20, 0.88);
+  border-radius: 5px;
+  padding: 4px 9px;
+  pointer-events: none;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hex-tooltip .swatch {
+  width: 10px;
+  height: 10px;
+}
+
+.hex-tooltip-name {
+  font-size: 12px;
+  color: #e0d8c8;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.hex-tooltip-coords {
+  font-size: 11px;
+  color: #8a8070;
+  white-space: nowrap;
+}
+
+/* ── Canvas ── */
+
+.canvas-center {
+  width: fit-content;
+  margin: 0 auto;
+}
+
+/* ── Generation Debug ── */
+
+.gen-debug {
+  margin: 24px auto;
+  max-width: 900px;
+  text-align: left;
+  font-family: monospace;
+  font-size: 13px;
+}
+
+.gen-debug-toolbar {
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.gen-debug-label {
+  font-weight: bold;
+  color: #667;
+}
+
+.gen-debug-btn {
+  padding: 5px 14px;
+  border-radius: 5px;
+  font-family: Georgia, serif;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+}
+
+.gen-debug-btn--setup {
+  background: #2a4a2a;
+  border: 1px solid #4a7a4a;
+  color: #c8ffc8;
+}
+
+.gen-debug-btn--setup:hover {
+  background: #3a6a3a;
+}
+
+.gen-debug-btn--generate {
+  background: #2a3a6a;
+  border: 1px solid #4a5a9a;
+  color: #c8d8ff;
+}
+
+.gen-debug-btn--generate:hover {
+  background: #3a4a8a;
+}
+
+.gen-debug-section {
+  margin-bottom: 8px;
+  border: 1px solid #333;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.gen-debug-section-toggle {
+  width: 100%;
+  text-align: left;
+  padding: 6px 12px;
+  background: #1a1a1a;
+  border: none;
+  color: #ccc;
+  cursor: pointer;
+  font-family: monospace;
+  font-size: 13px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.gen-debug-section-body {
+  margin: 0;
+  padding: 12px;
+  background: #111;
+  color: #d4d4d4;
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 400px;
+}
+
+/* ── Control panels ── */
+
+.section-label {
+  font-size: 10px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #667;
+  margin-bottom: 5px;
+}
+
+.type-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+.type-grid-btn {
+  padding: 3px 7px;
+  border: 2px solid rgba(0,0,0,0.25);
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 11px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.type-grid-btn--active {
+  border-color: #fff;
+  outline: 1px solid rgba(255,255,255,0.4);
+  outline-offset: 1px;
 }
 
 /* ── Mobile ── */

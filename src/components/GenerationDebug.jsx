@@ -17,87 +17,26 @@ export default function GenerationDebug() {
   ] : []
 
   return (
-    <div style={{
-      margin: '1.5rem auto',
-      maxWidth: '900px',
-      textAlign: 'left',
-      fontFamily: 'monospace',
-      fontSize: '0.8rem',
-    }}>
-      <div style={{ marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-        <span style={{ fontWeight: 'bold', color: '#888' }}>Generation Debug</span>
-        <button
-          onClick={runSetup}
-          style={{
-            padding: '5px 14px',
-            background: '#2a4a2a',
-            border: '1px solid #4a7a4a',
-            borderRadius: 5,
-            color: '#c8ffc8',
-            fontFamily: 'Georgia, serif',
-            fontSize: 13,
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            letterSpacing: '0.04em',
-          }}
-          onMouseEnter={e => { e.target.style.background = '#3a6a3a' }}
-          onMouseLeave={e => { e.target.style.background = '#2a4a2a' }}
-        >
+    <div className="gen-debug">
+      <div className="gen-debug-toolbar">
+        <span className="gen-debug-label">Generation Debug</span>
+        <button className="gen-debug-btn gen-debug-btn--setup" onClick={runSetup}>
           Setup Grid
         </button>
-        <button
-          onClick={runGenerate}
-          style={{
-            padding: '5px 14px',
-            background: '#2a3a6a',
-            border: '1px solid #4a5a9a',
-            borderRadius: 5,
-            color: '#c8d8ff',
-            fontFamily: 'Georgia, serif',
-            fontSize: 13,
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            letterSpacing: '0.04em',
-          }}
-          onMouseEnter={e => { e.target.style.background = '#3a4a8a' }}
-          onMouseLeave={e => { e.target.style.background = '#2a3a6a' }}
-        >
+        <button className="gen-debug-btn gen-debug-btn--generate" onClick={runGenerate}>
           Generate Map
         </button>
       </div>
 
       {sections.map(({ key, label, data }) => (
-        <div key={key} style={{ marginBottom: '0.5rem', border: '1px solid #333', borderRadius: '4px', overflow: 'hidden' }}>
-          <button
-            onClick={() => toggle(key)}
-            style={{
-              width: '100%',
-              textAlign: 'left',
-              padding: '0.4rem 0.75rem',
-              background: '#1a1a1a',
-              border: 'none',
-              color: '#ccc',
-              cursor: 'pointer',
-              fontFamily: 'monospace',
-              fontSize: '0.8rem',
-              display: 'flex',
-              justifyContent: 'space-between',
-            }}
-          >
+        <div key={key} className="gen-debug-section">
+          <button className="gen-debug-section-toggle" onClick={() => toggle(key)}>
             <span>{label}</span>
             <span>{openSections[key] ? '▲' : '▼'}</span>
           </button>
 
           {openSections[key] && (
-            <pre style={{
-              margin: 0,
-              padding: '0.75rem',
-              background: '#111',
-              color: '#d4d4d4',
-              overflowX: 'auto',
-              overflowY: 'auto',
-              maxHeight: '400px',
-            }}>
+            <pre className="gen-debug-section-body">
               {JSON.stringify(data, null, 2)}
             </pre>
           )}
