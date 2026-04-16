@@ -1,19 +1,10 @@
 import { createState, buildBiomeGroupings } from './state.js'
-import { buildGrid, GRID_COLS, GRID_ROWS } from '../core/hexGrid.js'
+import { buildGrid } from '../core/hexGrid.js'
 import {
   SECONDARY_TYPES,
   BIOME_LOOKUP,
   WEIGHTED_PRIMARY_BIOMES
 } from '../core/biomes.js'
-
-// Called once by the store on initial load to build the hex key structure.
-export function buildInitialHexMap () {
-  const m = {}
-  for (const hex of buildGrid()) {
-    m[`${hex.q},${hex.r}`] = null
-  }
-  return m
-}
 
 // =============================================================================
 // PHASE 1 — SETUP
@@ -68,8 +59,6 @@ export function setupGrid (existingHexMap) {
 // =============================================================================
 
 export function placeBiomes (state) {
-  void GRID_COLS
-  void GRID_ROWS
   return state
 }
 
