@@ -7,7 +7,7 @@ export default function HexCanvas({ hexMap, onHexClick }) {
   const grid  = useMemo(() => buildGrid(), [])
   const hexes = useMemo(() => grid.toArray(), [grid])
 
-  const [hoveredBiome, setHoveredBiome] = useState(null)
+  const [hoveredHex, setHoveredHex] = useState(null)
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
   const stageRef = useRef(null)
 
@@ -46,8 +46,8 @@ export default function HexCanvas({ hexMap, onHexClick }) {
                 strokeWidth={1}
                 onClick={() => onHexClick(hex)}
                 onTap={() => onHexClick(hex)}
-                onMouseEnter={() => setHoveredBiome(biome)}
-                onMouseLeave={() => setHoveredBiome(null)}
+                onMouseEnter={() => setHoveredHex({ q: hex.q, r: hex.r, biome })}
+                onMouseLeave={() => setHoveredHex(null)}
               />
             )
           })}
@@ -55,13 +55,13 @@ export default function HexCanvas({ hexMap, onHexClick }) {
       </Stage>
       </div>
 
-      {hoveredBiome && (
+      {hoveredHex && (
         <div style={{
           position: 'fixed',
           left: mousePos.x + 14,
           top: mousePos.y - 10,
           background: 'rgba(10, 12, 20, 0.88)',
-          border: `1px solid ${BIOME_CATALOG[hoveredBiome].color}`,
+          border: `1px solid ${BIOME_CATALOG[hoveredHex.biome].color}`,
           borderRadius: 5,
           padding: '4px 9px',
           pointerEvents: 'none',
@@ -72,11 +72,14 @@ export default function HexCanvas({ hexMap, onHexClick }) {
         }}>
           <span style={{
             width: 10, height: 10, borderRadius: 2,
-            background: BIOME_CATALOG[hoveredBiome].color,
+            background: BIOME_CATALOG[hoveredHex.biome].color,
             flexShrink: 0, display: 'inline-block',
           }} />
           <span style={{ fontSize: 12, color: '#e0d8c8', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
-            {BIOME_CATALOG[hoveredBiome].name}
+            {BIOME_CATALOG[hoveredHex.biome].name}
+          </span>
+          <span style={{ fontSize: 11, color: '#8a8070', whiteSpace: 'nowrap' }}>
+            {hoveredHex.q}, {hoveredHex.r}
           </span>
         </div>
       )}

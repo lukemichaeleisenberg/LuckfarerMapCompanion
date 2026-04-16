@@ -3,18 +3,18 @@ import { useMapStore } from '../store/mapStore.js'
 
 export default function GenerationDebug() {
   const generatorState = useMapStore(s => s.generatorState)
+  const runSetup    = useMapStore(s => s.setupOnly)
+  const runGenerate = useMapStore(s => s.generateMap)
   const [openSections, setOpenSections] = useState({ biomeGroupings: true, hexes: false })
-
-  if (!generatorState) return null
 
   function toggle(key) {
     setOpenSections(prev => ({ ...prev, [key]: !prev[key] }))
   }
 
-  const sections = [
+  const sections = generatorState ? [
     { key: 'biomeGroupings', label: 'Biome Groupings', data: generatorState.biomeGroupings },
     { key: 'hexes',          label: 'Hex Map',         data: generatorState.hexes },
-  ]
+  ] : []
 
   return (
     <div style={{
@@ -24,8 +24,46 @@ export default function GenerationDebug() {
       fontFamily: 'monospace',
       fontSize: '0.8rem',
     }}>
-      <div style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#888' }}>
-        Generation Debug
+      <div style={{ marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <span style={{ fontWeight: 'bold', color: '#888' }}>Generation Debug</span>
+        <button
+          onClick={runSetup}
+          style={{
+            padding: '5px 14px',
+            background: '#2a4a2a',
+            border: '1px solid #4a7a4a',
+            borderRadius: 5,
+            color: '#c8ffc8',
+            fontFamily: 'Georgia, serif',
+            fontSize: 13,
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            letterSpacing: '0.04em',
+          }}
+          onMouseEnter={e => { e.target.style.background = '#3a6a3a' }}
+          onMouseLeave={e => { e.target.style.background = '#2a4a2a' }}
+        >
+          Setup Grid
+        </button>
+        <button
+          onClick={runGenerate}
+          style={{
+            padding: '5px 14px',
+            background: '#2a3a6a',
+            border: '1px solid #4a5a9a',
+            borderRadius: 5,
+            color: '#c8d8ff',
+            fontFamily: 'Georgia, serif',
+            fontSize: 13,
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            letterSpacing: '0.04em',
+          }}
+          onMouseEnter={e => { e.target.style.background = '#3a4a8a' }}
+          onMouseLeave={e => { e.target.style.background = '#2a3a6a' }}
+        >
+          Generate Map
+        </button>
       </div>
 
       {sections.map(({ key, label, data }) => (

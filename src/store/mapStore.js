@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { GRID_COLS, GRID_ROWS } from '../core/hexGrid'
-import { buildInitialHexMap } from '../generator/steps.js'
+import { buildInitialHexMap, setupGrid } from '../generator/steps.js'
 import { generateMap } from '../generator/generateMap.js'
 
 const DEFAULT_HEX = { mode: 'biome', primary: 'sea', secondary: 'sea' }
@@ -21,6 +21,12 @@ export const useMapStore = create(set => ({
     set(prev => ({ hexMap: { ...prev.hexMap, [key]: hexState } })),
 
   resetMap: () => set({ hexMap: initHexMap(), generatorState: null }),
+
+  setupOnly: () =>
+    set(prev => {
+      const state = setupGrid(prev.hexMap)
+      return { generatorState: state }
+    }),
 
   generateMap: () =>
     set(prev => {
