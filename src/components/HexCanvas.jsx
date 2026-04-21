@@ -10,10 +10,18 @@ export default function HexCanvas({ hexMap, onHexClick }) {
   const [hoveredHex, setHoveredHex] = useState(null)
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
   const stageRef = useRef(null)
+  const wrapperRef = useRef(null)
 
   useEffect(() => {
     const container = stageRef.current?.getStage()?.container()
     if (container) container.style.touchAction = 'pan-x pan-y'
+  }, [])
+
+  useEffect(() => {
+    const el = wrapperRef.current
+    if (el) {
+      el.scrollLeft = (el.scrollWidth - el.clientWidth) / 2
+    }
   }, [])
 
   const canvasWidth = grid.pixelWidth  + HEX_X_RADIUS
@@ -21,6 +29,7 @@ export default function HexCanvas({ hexMap, onHexClick }) {
 
   return (
     <div
+      ref={wrapperRef}
       className="canvas-wrapper"
       onMouseMove={e => setMousePos({ x: e.clientX, y: e.clientY })}
     >
