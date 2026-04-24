@@ -5,6 +5,7 @@ import {
   BIOME_LOOKUP,
   WEIGHTED_PRIMARY_BIOMES
 } from '../core/biomes.js'
+import { placeOneShape, rollStartingHex } from './biomePlacement.js'
 
 // =============================================================================
 // PHASE 1 — SETUP
@@ -59,6 +60,14 @@ export function setupGrid (existingHexMap) {
 // =============================================================================
 
 export function placeBiomes (state) {
+  const findStart = rollStartingHex(state)
+
+  for (const grouping of state.biomeGroupings) {
+    for (const hexShape of grouping.hexShapes) {
+      placeOneShape(state, grouping, hexShape, findStart(grouping))
+    }
+  }
+
   return state
 }
 
