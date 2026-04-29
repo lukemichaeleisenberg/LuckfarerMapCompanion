@@ -7,6 +7,9 @@ export default function GenerationDebug() {
   const runGenerate = useMapStore(s => s.generateMap)
   const [openSections, setOpenSections] = useState({ biomeGroupings: true, hexes: false })
 
+  const debugEnabled = typeof window !== 'undefined'
+    && new URLSearchParams(window.location.search).has('debug')
+
   function toggle(key) {
     setOpenSections(prev => ({ ...prev, [key]: !prev[key] }))
   }
@@ -19,16 +22,18 @@ export default function GenerationDebug() {
   return (
     <div className="gen-debug">
       <div className="gen-debug-toolbar">
-        <span className="gen-debug-label">Generation Debug</span>
-        <button className="gen-debug-btn gen-debug-btn--setup" onClick={runSetup}>
-          Setup Grid
-        </button>
+        {debugEnabled && <span className="gen-debug-label">Generation Debug</span>}
+        {debugEnabled && (
+          <button className="gen-debug-btn gen-debug-btn--setup" onClick={runSetup}>
+            Setup Grid
+          </button>
+        )}
         <button className="gen-debug-btn gen-debug-btn--generate" onClick={runGenerate}>
           Generate Map
         </button>
       </div>
 
-      {sections.map(({ key, label, data }) => (
+      {debugEnabled && sections.map(({ key, label, data }) => (
         <div key={key} className="gen-debug-section">
           <button className="gen-debug-section-toggle" onClick={() => toggle(key)}>
             <span>{label}</span>
