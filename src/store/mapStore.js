@@ -1,7 +1,6 @@
 import { create } from 'zustand'
 import { buildGrid } from '../core/hexGrid.js'
-import { setupGrid } from '../generator/steps.js'
-import { generateMap, generateMapWithSnapshots } from '../generator/generateMap.js'
+import { generateMap } from '../generator/generateMap.js'
 
 const DEFAULT_HEX = { mode: 'biome', primary: 'sea', secondary: 'sea' }
 
@@ -30,26 +29,9 @@ export const useMapStore = create((set, get) => ({
     currentStep: -1
   }),
 
-  setupOnly: () => {
-    const state = setupGrid(get().hexMap)
-    set({ generatorState: state })
-  },
-
   generateMap: () => {
     set({ isGenerating: true })
-    const result = generateMap(get().hexMap)
-    set({
-      hexMap: result.hexes,
-      generatorState: result,
-      isGenerating: false,
-      snapshots: [],
-      currentStep: -1
-    })
-  },
-
-  generateWithSnapshots: () => {
-    set({ isGenerating: true })
-    const snapshots = generateMapWithSnapshots(get().hexMap)
+    const snapshots = generateMap(get().hexMap)
     const last = snapshots[snapshots.length - 1]
     set({
       snapshots,

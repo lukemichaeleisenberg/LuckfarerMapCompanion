@@ -83,7 +83,7 @@ export function placeBiomes (state, onStep) {
           `Group ${g + 1} of ${state.biomeGroupings.length} (${
             grouping.primaryBiome
           }). ` +
-          `Placed ${placed} ${hexShape.combined_biome} hexes as a ${hexShape.shape} starting from ${startText} (rolled ${rolledText}). ` +
+          `Rolled ${rolledText}. Placed ${placed} ${hexShape.combined_biome} hexes as a ${hexShape.shape} starting from ${startText}. ` +
           `Shape ${placedShapes} of ${totalShapes}.`,
         state
       })

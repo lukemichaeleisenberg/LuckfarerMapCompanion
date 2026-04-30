@@ -5,17 +5,13 @@ export default function GenerationDebug() {
   const generatorState   = useMapStore(s => s.generatorState)
   const snapshots        = useMapStore(s => s.snapshots)
   const currentStep      = useMapStore(s => s.currentStep)
-  const runSetup         = useMapStore(s => s.setupOnly)
   const runGenerate      = useMapStore(s => s.generateMap)
-  const runStepGenerate  = useMapStore(s => s.generateWithSnapshots)
   const stepForward      = useMapStore(s => s.stepForward)
   const stepBackward     = useMapStore(s => s.stepBackward)
   const goToStep         = useMapStore(s => s.goToStep)
 
   const [openSections, setOpenSections] = useState({ biomeGroupings: true, hexes: false })
-
-  const debugEnabled = typeof window !== 'undefined'
-    && new URLSearchParams(window.location.search).has('debug')
+  const [debugEnabled, setDebugEnabled] = useState(false)
 
   function toggle(key) {
     setOpenSections(prev => ({ ...prev, [key]: !prev[key] }))
@@ -32,20 +28,18 @@ export default function GenerationDebug() {
   return (
     <div className="gen-debug">
       <div className="gen-debug-toolbar">
-        {debugEnabled && <span className="gen-debug-label">Generation Debug</span>}
-        {debugEnabled && (
-          <button className="gen-debug-btn gen-debug-btn--setup" onClick={runSetup}>
-            Setup Grid
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <button className="gen-debug-btn gen-debug-btn--generate" onClick={runGenerate}>
+            Generate Map
           </button>
-        )}
-        <button className="gen-debug-btn gen-debug-btn--generate" onClick={runGenerate}>
-          Generate Map
-        </button>
-        {debugEnabled && (
-          <button className="gen-debug-btn gen-debug-btn--generate" onClick={runStepGenerate}>
-            Generate (Step Mode)
+          <button
+            className="gen-debug-btn gen-debug-btn--debug"
+            onClick={() => setDebugEnabled(d => !d)}
+            disabled={!hasSnapshots}
+          >
+            Debug
           </button>
-        )}
+        </div>
       </div>
 
       {debugEnabled && hasSnapshots && (

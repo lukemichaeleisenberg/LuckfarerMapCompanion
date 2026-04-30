@@ -40,14 +40,6 @@ export const STEPS = [
 ]
 
 export function generateMap (existingHexMap) {
-  let state
-  for (const step of STEPS) {
-    state = step.fn(state ?? existingHexMap)
-  }
-  return { hexes: state.hexes, biomeGroupings: state.biomeGroupings }
-}
-
-export function generateMapWithSnapshots (existingHexMap) {
   const snapshots = []
   let state
 

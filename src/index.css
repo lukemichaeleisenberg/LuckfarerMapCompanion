@@ -181,6 +181,7 @@ body {
   margin-bottom: 12px;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 16px;
 }
 
@@ -217,6 +218,16 @@ body {
 
 .gen-debug-btn--generate:hover {
   background: #3a4a8a;
+}
+
+.gen-debug-btn--debug {
+  background: #3a3a3a;
+  border: 1px solid #666;
+  color: #ccc;
+}
+
+.gen-debug-btn--debug:hover {
+  background: #4a4a4a;
 }
 
 .gen-debug-stepper {
