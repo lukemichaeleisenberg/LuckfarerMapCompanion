@@ -59,12 +59,34 @@ export function setupGrid (existingHexMap) {
 // Shape rules, tie-breaking, and fallback logic are helpers within this function.
 // =============================================================================
 
-export function placeBiomes (state) {
+export function placeBiomes (state, onStep) {
   const findStart = rollStartingHex(state)
+  const ROUNDS = 10
+  const totalShapes = state.biomeGroupings.length * ROUNDS
+  let placedShapes = 0
 
-  for (const grouping of state.biomeGroupings) {
-    for (const hexShape of grouping.hexShapes) {
-      placeOneShape(state, grouping, hexShape, findStart(grouping))
+  for (let g = 0; g < state.biomeGroupings.length; g++) {
+    const grouping = state.biomeGroupings[g]
+    for (let round = 0; round < ROUNDS; round++) {
+      const hexShape =
+        grouping.hexShapes[
+          Math.floor(Math.random() * grouping.hexShapes.length)
+        ]
+      const { start, rolled } = findStart(grouping)
+      const { placed } = placeOneShape(state, grouping, hexShape, start)
+      placedShapes++
+      const rolledText = rolled ? `(${rolled.q}, ${rolled.r})` : 'n/a'
+      const startText = start ? `(${start.q}, ${start.r})` : 'no valid start'
+      onStep?.({
+        label: `Place ${hexShape.shape}: ${hexShape.combined_biome}`,
+        description:
+          `Group ${g + 1} of ${state.biomeGroupings.length} (${
+            grouping.primaryBiome
+          }). ` +
+          `Placed ${placed} ${hexShape.combined_biome} hexes as a ${hexShape.shape} starting from ${startText} (rolled ${rolledText}). ` +
+          `Shape ${placedShapes} of ${totalShapes}.`,
+        state
+      })
     }
   }
 

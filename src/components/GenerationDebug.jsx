@@ -2,9 +2,16 @@ import { useState } from 'react'
 import { useMapStore } from '../store/mapStore.js'
 
 export default function GenerationDebug() {
-  const generatorState = useMapStore(s => s.generatorState)
-  const runSetup    = useMapStore(s => s.setupOnly)
-  const runGenerate = useMapStore(s => s.generateMap)
+  const generatorState   = useMapStore(s => s.generatorState)
+  const snapshots        = useMapStore(s => s.snapshots)
+  const currentStep      = useMapStore(s => s.currentStep)
+  const runSetup         = useMapStore(s => s.setupOnly)
+  const runGenerate      = useMapStore(s => s.generateMap)
+  const runStepGenerate  = useMapStore(s => s.generateWithSnapshots)
+  const stepForward      = useMapStore(s => s.stepForward)
+  const stepBackward     = useMapStore(s => s.stepBackward)
+  const goToStep         = useMapStore(s => s.goToStep)
+
   const [openSections, setOpenSections] = useState({ biomeGroupings: true, hexes: false })
 
   const debugEnabled = typeof window !== 'undefined'
@@ -19,6 +26,9 @@ export default function GenerationDebug() {
     { key: 'hexes',          label: 'Hex Map',         data: generatorState.hexes },
   ] : []
 
+  const hasSnapshots = snapshots.length > 0
+  const activeSnap   = hasSnapshots ? snapshots[currentStep] : null
+
   return (
     <div className="gen-debug">
       <div className="gen-debug-toolbar">
@@ -31,7 +41,57 @@ export default function GenerationDebug() {
         <button className="gen-debug-btn gen-debug-btn--generate" onClick={runGenerate}>
           Generate Map
         </button>
+        {debugEnabled && (
+          <button className="gen-debug-btn gen-debug-btn--generate" onClick={runStepGenerate}>
+            Generate (Step Mode)
+          </button>
+        )}
       </div>
+
+      {debugEnabled && hasSnapshots && (
+        <div className="gen-debug-stepper">
+          <div className="gen-debug-stepper-col">
+            <button
+              className="gen-debug-btn gen-debug-btn--setup"
+              onClick={stepBackward}
+              disabled={currentStep <= 0}
+            >
+              ◀ Prev
+            </button>
+            <button
+              className="gen-debug-btn gen-debug-btn--setup"
+              onClick={() => goToStep(0)}
+              disabled={currentStep <= 0}
+            >
+              ⏮ First
+            </button>
+          </div>
+          <div className="gen-debug-stepper-info">
+            <div className="gen-debug-stepper-title">
+              Step {currentStep + 1} / {snapshots.length}: {activeSnap.label}
+            </div>
+            <div className="gen-debug-stepper-desc">
+              {activeSnap.description}
+            </div>
+          </div>
+          <div className="gen-debug-stepper-col">
+            <button
+              className="gen-debug-btn gen-debug-btn--setup"
+              onClick={stepForward}
+              disabled={currentStep >= snapshots.length - 1}
+            >
+              Next ▶
+            </button>
+            <button
+              className="gen-debug-btn gen-debug-btn--setup"
+              onClick={() => goToStep(snapshots.length - 1)}
+              disabled={currentStep >= snapshots.length - 1}
+            >
+              Last ⏭
+            </button>
+          </div>
+        </div>
+      )}
 
       {debugEnabled && sections.map(({ key, label, data }) => (
         <div key={key} className="gen-debug-section">

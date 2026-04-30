@@ -1,7 +1,7 @@
 import { PointyHex } from '../core/hexGrid.js'
 
 export function placeOneShape (state, grouping, hexShape, start) {
-  if (!start) return
+  if (!start) return { placed: 0 }
 
   const biome = {
     primary: grouping.primaryBiome,
@@ -10,10 +10,11 @@ export function placeOneShape (state, grouping, hexShape, start) {
 
   writeHex(state, start, biome)
   let previous = start
+  let placed = 1
 
-  for (let placed = 1; placed < hexShape.count; placed++) {
+  for (; placed < hexShape.count; placed++) {
     const candidates = emptyNeighbors(state.hexes, previous.q, previous.r)
-    if (candidates.length === 0) return
+    if (candidates.length === 0) return { placed }
 
     const strategy = strategyFor(hexShape.shape, placed, hexShape.count)
     const next = pickByStrategy(state.hexes, candidates, biome, strategy)
@@ -21,17 +22,21 @@ export function placeOneShape (state, grouping, hexShape, start) {
     writeHex(state, next, biome)
     previous = next
   }
+
+  return { placed }
 }
 
 export function rollStartingHex (state) {
   return grouping => {
+    let firstRolled = null
     for (let coordTries = 0; coordTries < 10; coordTries++) {
       const rolled = rollCoordinate(grouping.coordinateModifier)
+      if (!firstRolled) firstRolled = rolled
       const snapped = nearestEmpty(state.hexes, rolled)
-      if (!snapped) return null
+      if (!snapped) return { start: null, rolled: firstRolled }
 
       if (emptyNeighbors(state.hexes, snapped.q, snapped.r).length > 0) {
-        return snapped
+        return { start: snapped, rolled: firstRolled }
       }
 
       for (let dirTries = 0; dirTries < 6; dirTries++) {
@@ -40,11 +45,11 @@ export function rollStartingHex (state) {
           walked &&
           emptyNeighbors(state.hexes, walked.q, walked.r).length > 0
         ) {
-          return walked
+          return { start: walked, rolled: firstRolled }
         }
       }
     }
-    return null
+    return { start: null, rolled: firstRolled }
   }
 }
 

@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { buildGrid } from '../core/hexGrid.js'
 import { setupGrid } from '../generator/steps.js'
-import { generateMap } from '../generator/generateMap.js'
+import { generateMap, generateMapWithSnapshots } from '../generator/generateMap.js'
 
 const DEFAULT_HEX = { mode: 'biome', primary: 'sea', secondary: 'sea' }
 
@@ -17,11 +17,18 @@ export const useMapStore = create((set, get) => ({
   hexMap: initHexMap(),
   generatorState: null,
   isGenerating: false,
+  snapshots: [],
+  currentStep: -1,
 
   setHex: (key, hexState) =>
     set(prev => ({ hexMap: { ...prev.hexMap, [key]: hexState } })),
 
-  resetMap: () => set({ hexMap: initHexMap(), generatorState: null }),
+  resetMap: () => set({
+    hexMap: initHexMap(),
+    generatorState: null,
+    snapshots: [],
+    currentStep: -1
+  }),
 
   setupOnly: () => {
     const state = setupGrid(get().hexMap)
@@ -31,7 +38,46 @@ export const useMapStore = create((set, get) => ({
   generateMap: () => {
     set({ isGenerating: true })
     const result = generateMap(get().hexMap)
-    set({ hexMap: result.hexes, generatorState: result, isGenerating: false })
+    set({
+      hexMap: result.hexes,
+      generatorState: result,
+      isGenerating: false,
+      snapshots: [],
+      currentStep: -1
+    })
+  },
+
+  generateWithSnapshots: () => {
+    set({ isGenerating: true })
+    const snapshots = generateMapWithSnapshots(get().hexMap)
+    const last = snapshots[snapshots.length - 1]
+    set({
+      snapshots,
+      currentStep: snapshots.length - 1,
+      hexMap: last.state.hexes,
+      generatorState: last.state,
+      isGenerating: false
+    })
+  },
+
+  goToStep: (index) => {
+    const { snapshots } = get()
+    if (index < 0 || index >= snapshots.length) return
+    const snap = snapshots[index]
+    set({
+      currentStep: index,
+      hexMap: snap.state.hexes,
+      generatorState: snap.state
+    })
+  },
+
+  stepForward: () => {
+    const { currentStep, snapshots } = get()
+    if (currentStep < snapshots.length - 1) get().goToStep(currentStep + 1)
+  },
+
+  stepBackward: () => {
+    const { currentStep } = get()
+    if (currentStep > 0) get().goToStep(currentStep - 1)
   },
 }))
-

@@ -39,8 +39,10 @@ export default function HexCanvas({ hexMap, onHexClick }) {
           {hexes.map(hex => {
             const key = `${hex.q},${hex.r}`
             const state = hexMap[key]
-            const biome = resolveBiome(state)
-            const { color, stroke } = BIOME_CATALOG[biome]
+            const isUnassigned = state == null
+            const biome = isUnassigned ? null : resolveBiome(state)
+            const color  = isUnassigned ? '#2a2a35' : BIOME_CATALOG[biome].color
+            const stroke = isUnassigned ? '#3a3a45' : BIOME_CATALOG[biome].stroke
             const cx = hex.x + HEX_X_RADIUS
             const cy = hex.y + HEX_Y_RADIUS
             return (
@@ -64,27 +66,27 @@ export default function HexCanvas({ hexMap, onHexClick }) {
       </Stage>
       </div>
 
-      {hoveredHex && (
-        <div
-          className="hex-tooltip"
-          style={{
-            left: mousePos.x + 14,
-            top: mousePos.y - 10,
-            borderColor: BIOME_CATALOG[hoveredHex.biome].color,
-          }}
-        >
-          <span
-            className="swatch"
-            style={{ background: BIOME_CATALOG[hoveredHex.biome].color }}
-          />
-          <span className="hex-tooltip-name">
-            {BIOME_CATALOG[hoveredHex.biome].name}
-          </span>
-          <span className="hex-tooltip-coords">
-            {hoveredHex.col}, {hoveredHex.row}
-          </span>
-        </div>
-      )}
+      {hoveredHex && (() => {
+        const entry = hoveredHex.biome ? BIOME_CATALOG[hoveredHex.biome] : null
+        const color = entry?.color ?? '#2a2a35'
+        const name  = entry?.name  ?? 'unassigned'
+        return (
+          <div
+            className="hex-tooltip"
+            style={{
+              left: mousePos.x + 14,
+              top: mousePos.y - 10,
+              borderColor: color,
+            }}
+          >
+            <span className="swatch" style={{ background: color }} />
+            <span className="hex-tooltip-name">{name}</span>
+            <span className="hex-tooltip-coords">
+              {hoveredHex.col}, {hoveredHex.row}
+            </span>
+          </div>
+        )
+      })()}
     </div>
   )
 }
