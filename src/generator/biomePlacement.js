@@ -97,6 +97,11 @@ function offsetToAxial (col1Indexed, row1Indexed) {
   return { q: hex.q, r: hex.r }
 }
 
+export function axialToOffset ({ q, r }) {
+  const hex = new PointyHex({ q, r })
+  return { col: hex.col + 1, row: hex.row + 1 }
+}
+
 function rollCoordinate (coordinateModifier) {
   let x = rollD20()
   let y = rollD20()

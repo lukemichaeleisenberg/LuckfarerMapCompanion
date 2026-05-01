@@ -82,7 +82,7 @@ export default function HexCanvas({ hexMap, onHexClick }) {
             <span className="swatch" style={{ background: color }} />
             <span className="hex-tooltip-name">{name}</span>
             <span className="hex-tooltip-coords">
-              {hoveredHex.col}, {hoveredHex.row}
+              {hoveredHex.col + 1}, {hoveredHex.row + 1}
             </span>
           </div>
         )

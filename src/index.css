@@ -239,6 +239,8 @@ body {
   background: #1a1a1a;
   border: 1px solid #333;
   border-radius: 4px;
+  height: 96px;
+  box-sizing: border-box;
 }
 
 .gen-debug-stepper-col {
@@ -251,6 +253,10 @@ body {
   flex: 1;
   min-width: 0;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
 }
 
 .gen-debug-stepper-title {
@@ -297,7 +303,7 @@ body {
   color: #d4d4d4;
   overflow-x: auto;
   overflow-y: auto;
-  max-height: 400px;
+  height: 400px;
 }
 
 /* ── Control panels ── */

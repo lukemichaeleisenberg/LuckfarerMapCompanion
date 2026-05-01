@@ -5,7 +5,7 @@ import {
   BIOME_LOOKUP,
   WEIGHTED_PRIMARY_BIOMES
 } from '../core/biomes.js'
-import { placeOneShape, rollStartingHex } from './biomePlacement.js'
+import { placeOneShape, rollStartingHex, axialToOffset } from './biomePlacement.js'
 
 // =============================================================================
 // PHASE 1 — SETUP
@@ -75,8 +75,10 @@ export function placeBiomes (state, onStep) {
       const { start, rolled } = findStart(grouping)
       const { placed } = placeOneShape(state, grouping, hexShape, start)
       placedShapes++
-      const rolledText = rolled ? `(${rolled.q}, ${rolled.r})` : 'n/a'
-      const startText = start ? `(${start.q}, ${start.r})` : 'no valid start'
+      const rolledOff = rolled ? axialToOffset(rolled) : null
+      const startOff = start ? axialToOffset(start) : null
+      const rolledText = rolledOff ? `(${rolledOff.col}, ${rolledOff.row})` : 'n/a'
+      const startText = startOff ? `(${startOff.col}, ${startOff.row})` : 'no valid start'
       onStep?.({
         label: `Place ${hexShape.shape}: ${hexShape.combined_biome}`,
         description:
