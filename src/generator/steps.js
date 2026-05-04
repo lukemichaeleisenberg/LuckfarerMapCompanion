@@ -5,7 +5,13 @@ import {
   BIOME_LOOKUP,
   WEIGHTED_PRIMARY_BIOMES
 } from '../core/biomes.js'
-import { placeOneShape, rollStartingHex, axialToOffset } from './biomePlacement.js'
+import {
+  placeOneShape,
+  rollStartingHex,
+  axialToOffset,
+  emptyNeighbors,
+  pickOne
+} from './biomePlacement.js'
 
 // =============================================================================
 // PHASE 1 — SETUP
@@ -67,18 +73,51 @@ export function placeBiomes (state, onStep) {
 
   for (let g = 0; g < state.biomeGroupings.length; g++) {
     const grouping = state.biomeGroupings[g]
+    let lastHex = null
+
     for (let round = 0; round < ROUNDS; round++) {
       const hexShape =
         grouping.hexShapes[
           Math.floor(Math.random() * grouping.hexShapes.length)
         ]
-      const { start, rolled } = findStart(grouping)
-      const { placed } = placeOneShape(state, grouping, hexShape, start)
+
+      // After placing a shape in the same grouping, try to start the next one
+      // in a random open direction from the last placed hex.
+      let start, rolled, continuedFromLast
+      if (round > 0 && lastHex) {
+        const openNeighbors = emptyNeighbors(state.hexes, lastHex.q, lastHex.r)
+        if (openNeighbors.length > 0) {
+          start = pickOne(openNeighbors)
+          rolled = null
+          continuedFromLast = true
+        } else {
+          ;({ start, rolled } = findStart(grouping))
+          continuedFromLast = false
+        }
+      } else {
+        ;({ start, rolled } = findStart(grouping))
+        continuedFromLast = false
+      }
+
+      const { placed, lastHex: newLastHex } = placeOneShape(
+        state,
+        grouping,
+        hexShape,
+        start
+      )
+      lastHex = newLastHex ?? lastHex
       placedShapes++
+
       const rolledOff = rolled ? axialToOffset(rolled) : null
       const startOff = start ? axialToOffset(start) : null
-      const rolledText = rolledOff ? `(${rolledOff.col}, ${rolledOff.row})` : 'n/a'
-      const startText = startOff ? `(${startOff.col}, ${startOff.row})` : 'no valid start'
+      const rolledText = rolledOff
+        ? `(${rolledOff.col}, ${rolledOff.row})`
+        : continuedFromLast
+        ? 'continued'
+        : 'n/a'
+      const startText = startOff
+        ? `(${startOff.col}, ${startOff.row})`
+        : 'no valid start'
       onStep?.({
         label: `Place ${hexShape.shape}: ${hexShape.combined_biome}`,
         description:

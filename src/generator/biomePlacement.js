@@ -1,7 +1,7 @@
 import { PointyHex } from '../core/hexGrid.js'
 
 export function placeOneShape (state, grouping, hexShape, start) {
-  if (!start) return { placed: 0 }
+  if (!start) return { placed: 0, lastHex: null }
 
   const biome = {
     primary: grouping.primaryBiome,
@@ -14,42 +14,30 @@ export function placeOneShape (state, grouping, hexShape, start) {
 
   for (; placed < hexShape.count; placed++) {
     const candidates = emptyNeighbors(state.hexes, previous.q, previous.r)
-    if (candidates.length === 0) return { placed }
+    if (candidates.length === 0) return { placed, lastHex: previous }
 
-    const strategy = strategyFor(hexShape.shape, placed, hexShape.count)
-    const next = pickByStrategy(state.hexes, candidates, biome, strategy)
+    // After rolling coordinates the first step goes in a random open direction.
+    // Subsequent steps use the shape strategy.
+    let next
+    if (placed === 1) {
+      next = pickOne(candidates)
+    } else {
+      const strategy = strategyFor(hexShape.shape, placed, hexShape.count)
+      next = pickByStrategy(state.hexes, candidates, biome, strategy)
+    }
 
     writeHex(state, next, biome)
     previous = next
   }
 
-  return { placed }
+  return { placed, lastHex: previous }
 }
 
 export function rollStartingHex (state) {
   return grouping => {
-    let firstRolled = null
-    for (let coordTries = 0; coordTries < 10; coordTries++) {
-      const rolled = rollCoordinate(grouping.coordinateModifier)
-      if (!firstRolled) firstRolled = rolled
-      const snapped = nearestEmpty(state.hexes, rolled)
-      if (!snapped) return { start: null, rolled: firstRolled }
-
-      if (emptyNeighbors(state.hexes, snapped.q, snapped.r).length > 0) {
-        return { start: snapped, rolled: firstRolled }
-      }
-
-      for (let dirTries = 0; dirTries < 6; dirTries++) {
-        const walked = firstEmptyAlong(state.hexes, snapped, randomDir())
-        if (
-          walked &&
-          emptyNeighbors(state.hexes, walked.q, walked.r).length > 0
-        ) {
-          return { start: walked, rolled: firstRolled }
-        }
-      }
-    }
-    return { start: null, rolled: firstRolled }
+    const rolled = rollCoordinate(grouping.coordinateModifier)
+    const snapped = nearestEmpty(state.hexes, rolled)
+    return { start: snapped ?? null, rolled }
   }
 }
 
@@ -70,7 +58,7 @@ function step (q, r, dir) {
 }
 
 const rollD20 = () => 1 + Math.floor(Math.random() * 20)
-const pickOne = arr => arr[Math.floor(Math.random() * arr.length)]
+export const pickOne = arr => arr[Math.floor(Math.random() * arr.length)]
 const randomDir = () => pickOne(DIRECTIONS)
 
 const keyOf = (q, r) => `${q},${r}`
@@ -116,7 +104,7 @@ const axialDistance = (a, b) =>
     Math.abs(a.r - b.r)) /
   2
 
-function emptyNeighbors (hexes, q, r) {
+export function emptyNeighbors (hexes, q, r) {
   const out = []
   for (const dir of DIRECTIONS) {
     const n = step(q, r, dir)
