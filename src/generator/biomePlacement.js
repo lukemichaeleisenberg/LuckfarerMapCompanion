@@ -33,12 +33,52 @@ export function placeOneShape (state, grouping, hexShape, start, randomFirstStep
   return { placed, lastHex: previous, firstDir }
 }
 
+// Steps 1 & 2 for subsequent shape placement:
+// 1) pick a random adjacent empty hex; 2) walk straight from each adjacent hex
+// in the same random direction order, returning the first empty hex found.
+// Returns null if neither step succeeds (caller should fall back to rollStartingHex).
+export function findStartFromHex (hexes, lastHex) {
+  const dirs = shuffle(DIRECTIONS)
+
+  // Step 1: random adjacent empty hex
+  const adjacent = []
+  for (const dir of dirs) {
+    const n = step(lastHex.q, lastHex.r, dir)
+    if (isEmpty(hexes, n.q, n.r)) adjacent.push({ ...n, dir })
+  }
+  if (adjacent.length > 0) return { hex: pickOne(adjacent), step: 1 }
+
+  // Step 2: straight line from each adjacent hex in the same direction order
+  for (const dir of dirs) {
+    const adj = step(lastHex.q, lastHex.r, dir)
+    const found = firstEmptyAlong(hexes, adj, dir)
+    if (found) return { hex: { ...found, dir }, step: 2 }
+  }
+
+  return null
+}
+
 export function rollStartingHex (state) {
   return grouping => {
-    const rolled = rollCoordinate(grouping.coordinateModifier)
-    const snapped = nearestEmpty(state.hexes, rolled)
-    return { start: snapped ?? null, rolled }
+    let rerolls = 0
+    while (true) {
+      const rolled = rollCoordinate(grouping.coordinateModifier)
+      if (isEmpty(state.hexes, rolled.q, rolled.r)) {
+        return { start: rolled, rerolls }
+      }
+      rerolls++
+      if (rerolls > 1000) return { start: null, rerolls }
+    }
   }
+}
+
+function shuffle (arr) {
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
 }
 
 export const DIRECTIONS = ['NE', 'E', 'SE', 'SW', 'W', 'NW']
@@ -62,10 +102,6 @@ export const pickOne = arr => arr[Math.floor(Math.random() * arr.length)]
 const randomDir = () => pickOne(DIRECTIONS)
 
 const keyOf = (q, r) => `${q},${r}`
-const parseKey = key => {
-  const [q, r] = key.split(',').map(Number)
-  return { q, r }
-}
 
 const onGrid = (hexes, q, r) =>
   Object.prototype.hasOwnProperty.call(hexes, keyOf(q, r))
@@ -98,12 +134,6 @@ function rollCoordinate (coordinateModifier) {
   return offsetToAxial(x, y)
 }
 
-const axialDistance = (a, b) =>
-  (Math.abs(a.q - b.q) +
-    Math.abs(a.q + a.r - b.q - b.r) +
-    Math.abs(a.r - b.r)) /
-  2
-
 export function emptyNeighbors (hexes, q, r) {
   const out = []
   for (const dir of DIRECTIONS) {
@@ -111,23 +141,6 @@ export function emptyNeighbors (hexes, q, r) {
     if (isEmpty(hexes, n.q, n.r)) out.push({ ...n, dir })
   }
   return out
-}
-
-function nearestEmpty (hexes, target) {
-  if (isEmpty(hexes, target.q, target.r)) return { q: target.q, r: target.r }
-
-  let best = null
-  let bestDist = Infinity
-  for (const key of Object.keys(hexes)) {
-    if (hexes[key] !== null) continue
-    const cell = parseKey(key)
-    const d = axialDistance(target, cell)
-    if (d < bestDist) {
-      bestDist = d
-      best = cell
-    }
-  }
-  return best
 }
 
 function firstEmptyAlong (hexes, from, dir) {

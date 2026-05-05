@@ -8,9 +8,8 @@ import {
 import {
   placeOneShape,
   rollStartingHex,
-  axialToOffset,
-  emptyNeighbors,
-  pickOne
+  findStartFromHex,
+  axialToOffset
 } from './biomePlacement.js'
 
 // =============================================================================
@@ -70,10 +69,10 @@ export function placeBiomes (state, onStep) {
   const ROUNDS = 10
   const totalShapes = state.biomeGroupings.length * ROUNDS
   let placedShapes = 0
+  let lastHex = null
 
   for (let g = 0; g < state.biomeGroupings.length; g++) {
     const grouping = state.biomeGroupings[g]
-    let lastHex = null
 
     for (let round = 0; round < ROUNDS; round++) {
       const hexShape =
@@ -81,38 +80,37 @@ export function placeBiomes (state, onStep) {
           Math.floor(Math.random() * grouping.hexShapes.length)
         ]
 
-      // After placing a shape in the same grouping, try to start the next one
-      // in a random open direction from the last placed hex.
-      let start, rolled, continuedFromLast
-      if (round > 0 && lastHex) {
-        const openNeighbors = emptyNeighbors(state.hexes, lastHex.q, lastHex.r)
-        if (openNeighbors.length > 0) {
-          start = pickOne(openNeighbors)
-          rolled = null
-          continuedFromLast = true
-        } else {
-          ;({ start, rolled } = findStart(grouping))
-          continuedFromLast = false
-        }
+      // First shape ever: roll. All subsequent shapes: steps 1 → 2 → 3.
+      let start, rerolls, originText
+      if (!lastHex) {
+        ;({ start, rerolls } = findStart(grouping))
+        originText = `Rolled ${rerolls} reroll${rerolls === 1 ? '' : 's'}`
       } else {
-        ;({ start, rolled } = findStart(grouping))
-        continuedFromLast = false
+        const found = findStartFromHex(state.hexes, lastHex)
+        if (found) {
+          start = found.hex
+          rerolls = 0
+          originText = found.step === 1
+            ? `Adjacent ${start.dir}`
+            : `Line ${start.dir}`
+        } else {
+          ;({ start, rerolls } = findStart(grouping))
+          originText = `Rolled ${rerolls} reroll${rerolls === 1 ? '' : 's'}`
+        }
       }
 
+      // randomFirstStep only applies when we rolled (not chaining from lastHex)
+      const randomFirstStep = !lastHex || !start?.dir || originText.startsWith('Rolled')
       const {
         placed,
         lastHex: newLastHex,
         firstDir
-      } = placeOneShape(state, grouping, hexShape, start, !continuedFromLast)
+      } = placeOneShape(state, grouping, hexShape, start, randomFirstStep)
       lastHex = newLastHex ?? lastHex
       placedShapes++
 
-      const rolledOff = rolled ? axialToOffset(rolled) : null
       const startOff = start ? axialToOffset(start) : null
       const endOff = newLastHex ? axialToOffset(newLastHex) : null
-      const originText = continuedFromLast
-        ? `Continued ${start.dir}`
-        : `Rolled ${rolledOff ? `(${rolledOff.col}, ${rolledOff.row})` : 'n/a'}`
       const startText = startOff
         ? `(${startOff.col}, ${startOff.row})`
         : 'no valid start'
