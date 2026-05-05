@@ -22,12 +22,13 @@ export const useMapStore = create((set, get) => ({
   setHex: (key, hexState) =>
     set(prev => ({ hexMap: { ...prev.hexMap, [key]: hexState } })),
 
-  resetMap: () => set({
-    hexMap: initHexMap(),
-    generatorState: null,
-    snapshots: [],
-    currentStep: -1
-  }),
+  resetMap: () =>
+    set({
+      hexMap: initHexMap(),
+      generatorState: null,
+      snapshots: [],
+      currentStep: -1
+    }),
 
   generateMap: () => {
     set({ isGenerating: true })
@@ -42,7 +43,7 @@ export const useMapStore = create((set, get) => ({
     })
   },
 
-  goToStep: (index) => {
+  goToStep: index => {
     const { snapshots } = get()
     if (index < 0 || index >= snapshots.length) return
     const snap = snapshots[index]
@@ -61,5 +62,5 @@ export const useMapStore = create((set, get) => ({
   stepBackward: () => {
     const { currentStep } = get()
     if (currentStep > 0) get().goToStep(currentStep - 1)
-  },
+  }
 }))

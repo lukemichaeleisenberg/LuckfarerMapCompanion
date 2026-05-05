@@ -1,6 +1,6 @@
 import { PointyHex } from '../core/hexGrid.js'
 
-export function placeOneShape (state, grouping, hexShape, start) {
+export function placeOneShape (state, grouping, hexShape, start, randomFirstStep = true) {
   if (!start) return { placed: 0, lastHex: null }
 
   const biome = {
@@ -11,16 +11,16 @@ export function placeOneShape (state, grouping, hexShape, start) {
   writeHex(state, start, biome)
   let previous = start
   let placed = 1
+  let firstDir = null
 
   for (; placed < hexShape.count; placed++) {
     const candidates = emptyNeighbors(state.hexes, previous.q, previous.r)
-    if (candidates.length === 0) return { placed, lastHex: previous }
+    if (candidates.length === 0) return { placed, lastHex: previous, firstDir }
 
-    // After rolling coordinates the first step goes in a random open direction.
-    // Subsequent steps use the shape strategy.
     let next
-    if (placed === 1) {
+    if (placed === 1 && randomFirstStep) {
       next = pickOne(candidates)
+      firstDir = next.dir
     } else {
       const strategy = strategyFor(hexShape.shape, placed, hexShape.count)
       next = pickByStrategy(state.hexes, candidates, biome, strategy)
@@ -30,7 +30,7 @@ export function placeOneShape (state, grouping, hexShape, start) {
     previous = next
   }
 
-  return { placed, lastHex: previous }
+  return { placed, lastHex: previous, firstDir }
 }
 
 export function rollStartingHex (state) {

@@ -99,32 +99,35 @@ export function placeBiomes (state, onStep) {
         continuedFromLast = false
       }
 
-      const { placed, lastHex: newLastHex } = placeOneShape(
-        state,
-        grouping,
-        hexShape,
-        start
-      )
+      const {
+        placed,
+        lastHex: newLastHex,
+        firstDir
+      } = placeOneShape(state, grouping, hexShape, start, !continuedFromLast)
       lastHex = newLastHex ?? lastHex
       placedShapes++
 
       const rolledOff = rolled ? axialToOffset(rolled) : null
       const startOff = start ? axialToOffset(start) : null
-      const rolledText = rolledOff
-        ? `(${rolledOff.col}, ${rolledOff.row})`
-        : continuedFromLast
-        ? 'continued'
-        : 'n/a'
+      const endOff = newLastHex ? axialToOffset(newLastHex) : null
+      const originText = continuedFromLast
+        ? `Continued ${start.dir}`
+        : `Rolled ${rolledOff ? `(${rolledOff.col}, ${rolledOff.row})` : 'n/a'}`
       const startText = startOff
         ? `(${startOff.col}, ${startOff.row})`
         : 'no valid start'
+      const endText = endOff ? `(${endOff.col}, ${endOff.row})` : startText
       onStep?.({
         label: `Place ${hexShape.shape}: ${hexShape.combined_biome}`,
         description:
           `Group ${g + 1} of ${state.biomeGroupings.length} (${
             grouping.primaryBiome
           }). ` +
-          `Rolled ${rolledText}. Placed ${placed} ${hexShape.combined_biome} hexes as a ${hexShape.shape} starting from ${startText}. ` +
+          `${originText}. Placed ${placed} ${
+            hexShape.combined_biome
+          } hexes as a ${hexShape.shape} starting from ${startText}${
+            firstDir ? ` and continued ${firstDir}` : ''
+          }, ending at ${endText}. ` +
           `Shape ${placedShapes} of ${totalShapes}.`,
         state
       })
