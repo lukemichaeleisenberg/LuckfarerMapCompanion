@@ -12,22 +12,22 @@
 /**
  * @typedef {Object} CoordinateModifier
  * @property {'x'|'y'} axis
- * @property {number}  delta
+ * @property {number}  offset
  */
 
 /**
- * @typedef {Object} HexGroupShape
- * @property {number} count
- * @property {string} biome   - biome key (primary or secondary lookup result)
+ * @typedef {Object} HexShape
+ * @property {string|null} secondary_biome   - rolled secondary type (or null pre-setup)
+ * @property {string|null} combined_biome    - resolved BIOME_LOOKUP result (or null pre-setup)
+ * @property {number}      count             - target hex count for this shape
  * @property {'clump'|'tendril'|'belt'} shape
  */
 
 /**
  * @typedef {Object} BiomeGrouping
  * @property {CoordinateModifier} coordinateModifier
- * @property {string}             primaryBiome       - e.g. 'arctic', 'sea'
- * @property {HexGroupShape[]}    hexGroupShapes     - first 3 shapes (steps D–F)
- * @property {HexGroupShape}      finalClump         - "N+1 Clump Hexes of previously placed biome"
+ * @property {string|null}        primaryBiome       - e.g. 'arctic', 'sea' (null pre-setup)
+ * @property {HexShape[]}         hexShapes          - 4 shapes: clump, tendril, belt, clump (final clump = base+1)
  */
 
 /**

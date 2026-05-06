@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { BIOME_LOOKUP } from './core/biomes.js'
+import { keyOf } from './core/hexGrid.js'
 import { useMapStore } from './store/mapStore.js'
 import HexCanvas from './components/HexCanvas.jsx'
 import PalettePanel from './components/control-panels/PalettePanel.jsx'
@@ -21,7 +22,7 @@ export default function App() {
   function selectOther(t)     { setActiveOther(t) }
 
   function handleHexClick(hex) {
-    const key = `${hex.q},${hex.r}`
+    const key = keyOf(hex.q, hex.r)
     const newState = activeOther
       ? { mode: 'other', type: activeOther }
       : { mode: 'biome', primary: activePrimary, secondary: activeSecondary }

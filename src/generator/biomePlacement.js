@@ -1,4 +1,14 @@
-import { PointyHex } from '../core/hexGrid.js'
+import {
+  DIRECTIONS,
+  step,
+  keyOf,
+  offsetToAxial,
+  filterNeighbors,
+  countNeighbors
+} from '../core/hexGrid.js'
+import { pickOne, rollD20, shuffle } from '../core/random.js'
+
+export { pickOne }
 
 export function placeOneShape (state, grouping, hexShape, start, randomFirstStep = true) {
   if (!start) return { placed: 0, lastHex: null }
@@ -38,18 +48,12 @@ export function placeOneShape (state, grouping, hexShape, start, randomFirstStep
 // in the same random direction order, returning the first empty hex found.
 // Returns null if neither step succeeds (caller should fall back to rollStartingHex).
 export function findStartFromHex (hexes, lastHex) {
-  const dirs = shuffle(DIRECTIONS)
-
   // Step 1: random adjacent empty hex
-  const adjacent = []
-  for (const dir of dirs) {
-    const n = step(lastHex.q, lastHex.r, dir)
-    if (isEmpty(hexes, n.q, n.r)) adjacent.push({ ...n, dir })
-  }
+  const adjacent = filterNeighbors(hexes, lastHex.q, lastHex.r, isEmptyHex)
   if (adjacent.length > 0) return { hex: pickOne(adjacent), step: 1 }
 
-  // Step 2: straight line from each adjacent hex in the same direction order
-  for (const dir of dirs) {
+  // Step 2: straight line from each adjacent hex in shuffled direction order
+  for (const dir of shuffle(DIRECTIONS)) {
     const adj = step(lastHex.q, lastHex.r, dir)
     const found = firstEmptyAlong(hexes, adj, dir)
     if (found) return { hex: { ...found, dir }, step: 2 }
@@ -72,37 +76,8 @@ export function rollStartingHex (state) {
   }
 }
 
-function shuffle (arr) {
-  const a = [...arr]
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[a[i], a[j]] = [a[j], a[i]]
-  }
-  return a
-}
-
-export const DIRECTIONS = ['NE', 'E', 'SE', 'SW', 'W', 'NW']
-
-const STEP = {
-  NE: { q: 1, r: -1 },
-  E: { q: 1, r: 0 },
-  SE: { q: 0, r: 1 },
-  SW: { q: -1, r: 1 },
-  W: { q: -1, r: 0 },
-  NW: { q: 0, r: -1 }
-}
-
-function step (q, r, dir) {
-  const d = STEP[dir]
-  return { q: q + d.q, r: r + d.r }
-}
-
-const rollD20 = () => 1 + Math.floor(Math.random() * 20)
-export const pickOne = arr => arr[Math.floor(Math.random() * arr.length)]
-const randomDir = () => pickOne(DIRECTIONS)
-
-const keyOf = (q, r) => `${q},${r}`
-
+// In our hex map: undefined = off-grid, null = empty, object = occupied.
+const isEmptyHex = hex => hex === null
 const onGrid = (hexes, q, r) =>
   Object.prototype.hasOwnProperty.call(hexes, keyOf(q, r))
 const isEmpty = (hexes, q, r) =>
@@ -116,16 +91,6 @@ function writeHex (state, { q, r }, biome) {
   }
 }
 
-function offsetToAxial (col1Indexed, row1Indexed) {
-  const hex = new PointyHex({ col: col1Indexed - 1, row: row1Indexed - 1 })
-  return { q: hex.q, r: hex.r }
-}
-
-export function axialToOffset ({ q, r }) {
-  const hex = new PointyHex({ q, r })
-  return { col: hex.col + 1, row: hex.row + 1 }
-}
-
 function rollCoordinate (coordinateModifier) {
   let x = rollD20()
   let y = rollD20()
@@ -135,12 +100,7 @@ function rollCoordinate (coordinateModifier) {
 }
 
 export function emptyNeighbors (hexes, q, r) {
-  const out = []
-  for (const dir of DIRECTIONS) {
-    const n = step(q, r, dir)
-    if (isEmpty(hexes, n.q, n.r)) out.push({ ...n, dir })
-  }
-  return out
+  return filterNeighbors(hexes, q, r, isEmptyHex)
 }
 
 function firstEmptyAlong (hexes, from, dir) {
@@ -159,19 +119,11 @@ function strategyFor (shape, indexPlaced, totalCount) {
 }
 
 function sameBiomeNeighborCount (hexes, q, r, biome) {
-  let count = 0
-  for (const dir of DIRECTIONS) {
-    const n = step(q, r, dir)
-    const h = hexes[keyOf(n.q, n.r)]
-    if (
-      h?.mode === 'biome' &&
-      h.primary === biome.primary &&
-      h.secondary === biome.secondary
-    ) {
-      count++
-    }
-  }
-  return count
+  return countNeighbors(hexes, q, r, h =>
+    h?.mode === 'biome' &&
+    h.primary === biome.primary &&
+    h.secondary === biome.secondary
+  )
 }
 
 function pickByStrategy (hexes, candidates, biome, strategy) {
@@ -183,5 +135,5 @@ function pickByStrategy (hexes, candidates, biome, strategy) {
     strategy === 'max'
       ? Math.max(...scored.map(s => s.score))
       : Math.min(...scored.map(s => s.score))
-  return scored.find(s => s.score === target)
+  return pickOne(scored.filter(s => s.score === target))
 }

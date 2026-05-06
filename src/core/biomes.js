@@ -314,6 +314,18 @@ export function resolveBiome (hexState) {
   return BIOME_LOOKUP[hexState.primary]?.[hexState.secondary] ?? 'sea'
 }
 
+// Derive the secondary + combined biome for a shape, applying special rules:
+//   - The first shape in a mountain grouping is always hill (yields mountain_hill).
+//   - A shape immediately following a mountain-secondary shape becomes hill.
+// `rolledSecondary` is the random pre-roll the caller already made.
+export function deriveSecondaryBiome ({ primaryBiome, rolledSecondary, isFirstShape, prevSecondary }) {
+  let secondary = rolledSecondary
+  if (isFirstShape && primaryBiome === 'mountain') secondary = 'hill'
+  if (prevSecondary === 'mountain') secondary = 'hill'
+  const combined = BIOME_LOOKUP[primaryBiome]?.[secondary] ?? primaryBiome
+  return { secondary, combined }
+}
+
 // Representative fill color for each primary/secondary type selector button
 export const TYPE_COLORS = {
   arctic: '#ddeeff',

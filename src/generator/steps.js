@@ -1,15 +1,15 @@
 import { createState, buildBiomeGroupings } from './state.js'
-import { buildGrid } from '../core/hexGrid.js'
+import { axialToOffset } from '../core/hexGrid.js'
+import { pickOne, pickWeighted } from '../core/random.js'
 import {
   SECONDARY_TYPES,
-  BIOME_LOOKUP,
-  WEIGHTED_PRIMARY_BIOMES
+  WEIGHTED_PRIMARY_BIOMES,
+  deriveSecondaryBiome
 } from '../core/biomes.js'
 import {
   placeOneShape,
   rollStartingHex,
-  findStartFromHex,
-  axialToOffset
+  findStartFromHex
 } from './biomePlacement.js'
 
 // =============================================================================
@@ -28,29 +28,17 @@ export function setupGrid (existingHexMap) {
 
   let prevShape = null
   for (const grouping of state.biomeGroupings) {
-    grouping.primaryBiome =
-      WEIGHTED_PRIMARY_BIOMES[
-        Math.floor(Math.random() * WEIGHTED_PRIMARY_BIOMES.length)
-      ]
+    grouping.primaryBiome = pickWeighted(WEIGHTED_PRIMARY_BIOMES)
 
     grouping.hexShapes.forEach((hexShape, idx) => {
-      hexShape.secondary_biome =
-        SECONDARY_TYPES[Math.floor(Math.random() * SECONDARY_TYPES.length)]
-      hexShape.combined_biome =
-        BIOME_LOOKUP[grouping.primaryBiome]?.[hexShape.secondary_biome] ??
-        grouping.primaryBiome
-
-      if (idx === 0 && grouping.primaryBiome === 'mountain') {
-        hexShape.secondary_biome = 'hill'
-        hexShape.combined_biome = BIOME_LOOKUP['mountain']['hill'] // mountain_hill
-      }
-
-      if (prevShape?.secondary_biome === 'mountain') {
-        hexShape.secondary_biome = 'hill'
-        hexShape.combined_biome =
-          BIOME_LOOKUP[grouping.primaryBiome]?.['hill'] ?? grouping.primaryBiome
-      }
-
+      const { secondary, combined } = deriveSecondaryBiome({
+        primaryBiome: grouping.primaryBiome,
+        rolledSecondary: pickOne(SECONDARY_TYPES),
+        isFirstShape: idx === 0,
+        prevSecondary: prevShape?.secondary_biome
+      })
+      hexShape.secondary_biome = secondary
+      hexShape.combined_biome = combined
       prevShape = hexShape
     })
   }
@@ -64,9 +52,10 @@ export function setupGrid (existingHexMap) {
 // Shape rules, tie-breaking, and fallback logic are helpers within this function.
 // =============================================================================
 
+const ROUNDS = 10
+
 export function placeBiomes (state, onStep) {
   const findStart = rollStartingHex(state)
-  const ROUNDS = 10
   const totalShapes = state.biomeGroupings.length * ROUNDS
   let placedShapes = 0
   let lastHex = null
@@ -75,29 +64,8 @@ export function placeBiomes (state, onStep) {
     const grouping = state.biomeGroupings[g]
 
     for (let round = 0; round < ROUNDS; round++) {
-      const hexShape =
-        grouping.hexShapes[
-          Math.floor(Math.random() * grouping.hexShapes.length)
-        ]
-
-      // First shape ever: roll. All subsequent shapes: steps 1 → 2 → 3.
-      let start, rerolls, originText
-      if (!lastHex) {
-        ;({ start, rerolls } = findStart(grouping))
-        originText = `Rolled ${rerolls} reroll${rerolls === 1 ? '' : 's'}`
-      } else {
-        const found = findStartFromHex(state.hexes, lastHex)
-        if (found) {
-          start = found.hex
-          rerolls = 0
-          originText = found.step === 1
-            ? `Adjacent ${start.dir}`
-            : `Line ${start.dir}`
-        } else {
-          ;({ start, rerolls } = findStart(grouping))
-          originText = `Rolled ${rerolls} reroll${rerolls === 1 ? '' : 's'}`
-        }
-      }
+      const hexShape = pickOne(grouping.hexShapes)
+      const { start, originText } = pickStartHex(state, grouping, lastHex, findStart)
 
       // randomFirstStep only applies when we rolled (not chaining from lastHex)
       const randomFirstStep = !lastHex || !start?.dir || originText.startsWith('Rolled')
@@ -109,30 +77,70 @@ export function placeBiomes (state, onStep) {
       lastHex = newLastHex ?? lastHex
       placedShapes++
 
-      const startOff = start ? axialToOffset(start) : null
-      const endOff = newLastHex ? axialToOffset(newLastHex) : null
-      const startText = startOff
-        ? `(${startOff.col}, ${startOff.row})`
-        : 'no valid start'
-      const endText = endOff ? `(${endOff.col}, ${endOff.row})` : startText
       onStep?.({
-        label: `Place ${hexShape.shape}: ${hexShape.combined_biome}`,
-        description:
-          `Group ${g + 1} of ${state.biomeGroupings.length} (${
-            grouping.primaryBiome
-          }). ` +
-          `${originText}. Placed ${placed} ${
-            hexShape.combined_biome
-          } hexes as a ${hexShape.shape} starting from ${startText}${
-            firstDir ? ` and continued ${firstDir}` : ''
-          }, ending at ${endText}. ` +
-          `Shape ${placedShapes} of ${totalShapes}.`,
+        ...formatPlacementStep({
+          g,
+          totalGroups: state.biomeGroupings.length,
+          grouping,
+          hexShape,
+          placed,
+          placedShapes,
+          totalShapes,
+          start,
+          newLastHex,
+          firstDir,
+          originText
+        }),
         state
       })
     }
   }
 
   return state
+}
+
+// First shape ever: roll. All subsequent shapes: try steps 1 → 2 → fall back to roll.
+function pickStartHex (state, grouping, lastHex, findStart) {
+  if (!lastHex) {
+    const { start, rerolls } = findStart(grouping)
+    return { start, originText: rolledOriginText(rerolls) }
+  }
+
+  const found = findStartFromHex(state.hexes, lastHex)
+  if (found) {
+    const originText = found.step === 1
+      ? `Adjacent ${found.hex.dir}`
+      : `Line ${found.hex.dir}`
+    return { start: found.hex, originText }
+  }
+
+  const { start, rerolls } = findStart(grouping)
+  return { start, originText: rolledOriginText(rerolls) }
+}
+
+const rolledOriginText = rerolls =>
+  `Rolled ${rerolls} reroll${rerolls === 1 ? '' : 's'}`
+
+function formatPlacementStep ({
+  g, totalGroups, grouping, hexShape,
+  placed, placedShapes, totalShapes,
+  start, newLastHex, firstDir, originText
+}) {
+  const startOff = start ? axialToOffset(start) : null
+  const endOff = newLastHex ? axialToOffset(newLastHex) : null
+  const startText = startOff ? `(${startOff.col}, ${startOff.row})` : 'no valid start'
+  const endText = endOff ? `(${endOff.col}, ${endOff.row})` : startText
+  const continuedText = firstDir ? ` and continued ${firstDir}` : ''
+
+  return {
+    label: `Place ${hexShape.shape}: ${hexShape.combined_biome}`,
+    description:
+      `Group ${g + 1} of ${totalGroups} (${grouping.primaryBiome}). ` +
+      `${originText}. Placed ${placed} ${hexShape.combined_biome} hexes ` +
+      `as a ${hexShape.shape} starting from ${startText}${continuedText}, ` +
+      `ending at ${endText}. ` +
+      `Shape ${placedShapes} of ${totalShapes}.`
+  }
 }
 
 // =============================================================================

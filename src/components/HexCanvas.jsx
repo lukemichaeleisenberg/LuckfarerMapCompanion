@@ -1,6 +1,6 @@
 import { useMemo, useState, useRef, useEffect } from 'react'
 import { Stage, Layer, RegularPolygon } from 'react-konva'
-import { buildGrid, HEX_X_RADIUS, HEX_Y_RADIUS, HEX_SIZE } from '../core/hexGrid.js'
+import { buildGrid, HEX_X_RADIUS, HEX_Y_RADIUS, HEX_SIZE, keyOf } from '../core/hexGrid.js'
 import { BIOME_CATALOG, resolveBiome } from '../core/biomes.js'
 
 export default function HexCanvas({ hexMap, onHexClick }) {
@@ -37,7 +37,7 @@ export default function HexCanvas({ hexMap, onHexClick }) {
       <Stage ref={stageRef} width={canvasWidth} height={canvasHeight}>
         <Layer>
           {hexes.map(hex => {
-            const key = `${hex.q},${hex.r}`
+            const key = keyOf(hex.q, hex.r)
             const state = hexMap[key]
             const isUnassigned = state == null
             const biome = isUnassigned ? null : resolveBiome(state)
