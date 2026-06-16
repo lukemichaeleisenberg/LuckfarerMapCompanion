@@ -5,6 +5,7 @@ import {
   placeFeatures,
   cleanupFeatures
 } from './steps.js'
+import { setSeed, randomSeed } from '../core/random.js'
 
 export const STEPS = [
   {
@@ -39,7 +40,13 @@ export const STEPS = [
   }
 ]
 
-export function generateMap (existingHexMap) {
+export function generateMap (existingHexMap, seed) {
+  // Seed the RNG before any rolls happen. A blank seed gets a fresh random one
+  // so the result is always reproducible from the returned `seed`.
+  const usedSeed = setSeed(seed === null || seed === undefined || seed === ''
+    ? randomSeed()
+    : seed)
+
   const snapshots = []
   let state
 
@@ -63,5 +70,5 @@ export function generateMap (existingHexMap) {
     }
   }
 
-  return snapshots
+  return { snapshots, seed: usedSeed }
 }

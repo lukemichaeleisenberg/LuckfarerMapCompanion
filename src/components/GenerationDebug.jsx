@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useMapStore } from '../store/mapStore.js'
 
 export default function GenerationDebug() {
@@ -9,9 +9,61 @@ export default function GenerationDebug() {
   const stepForward      = useMapStore(s => s.stepForward)
   const stepBackward     = useMapStore(s => s.stepBackward)
   const goToStep         = useMapStore(s => s.goToStep)
+  const loadGeneration   = useMapStore(s => s.loadGeneration)
+  const seed             = useMapStore(s => s.seed)
 
   const [openSections, setOpenSections] = useState({ biomeGroupings: true, hexes: false })
   const [debugEnabled, setDebugEnabled] = useState(false)
+  const [importError, setImportError] = useState(null)
+  const [seedInput, setSeedInput] = useState('')
+  const fileInputRef = useRef(null)
+
+  // After a generation, reflect the actual seed used (a blank input gets a
+  // random one) back into the input.
+  useEffect(() => {
+    if (seed != null) setSeedInput(String(seed))
+  }, [seed])
+
+  function handleGenerate() {
+    runGenerate(seedInput.trim())
+  }
+
+  function handleExport() {
+    const data = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      seed,
+      snapshots
+    }
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `map-generation-${Date.now()}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  function handleImportFile(e) {
+    const file = e.target.files[0]
+    e.target.value = ''
+    if (!file) return
+    setImportError(null)
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target.result)
+        if (!Array.isArray(data.snapshots) || data.snapshots.length === 0) {
+          throw new Error('Invalid format: missing snapshots array')
+        }
+        loadGeneration(data.snapshots, data.seed ?? null)
+        setDebugEnabled(true)
+      } catch (err) {
+        setImportError(err.message)
+      }
+    }
+    reader.readAsText(file)
+  }
 
   function toggle(key) {
     setOpenSections(prev => ({ ...prev, [key]: !prev[key] }))
@@ -28,18 +80,60 @@ export default function GenerationDebug() {
   return (
     <div className="gen-debug">
       <div className="gen-debug-toolbar">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <button className="gen-debug-btn gen-debug-btn--generate" onClick={runGenerate}>
-            Generate Map
-          </button>
-          <button
-            className="gen-debug-btn gen-debug-btn--debug"
-            onClick={() => setDebugEnabled(d => !d)}
-            disabled={!hasSnapshots}
-          >
-            Debug
-          </button>
+        <div className="gen-debug-cols">
+          <div className="gen-debug-col">
+            <button className="gen-debug-btn gen-debug-btn--generate" onClick={handleGenerate}>
+              Generate Map
+            </button>
+            <input
+              className="gen-debug-seed-input"
+              type="text"
+              value={seedInput}
+              placeholder="Seed (blank = random)"
+              onChange={e => setSeedInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') handleGenerate() }}
+            />
+            {seed != null && (
+              <div className="gen-debug-seed-label">
+                Seed: <code>{seed}</code>
+              </div>
+            )}
+          </div>
+          <div className="gen-debug-col">
+            <button
+              className="gen-debug-btn gen-debug-btn--debug"
+              onClick={() => setDebugEnabled(d => !d)}
+              disabled={!hasSnapshots}
+            >
+              Debug
+            </button>
+            <button
+              className="gen-debug-btn gen-debug-btn--setup"
+              onClick={handleExport}
+              disabled={!hasSnapshots}
+            >
+              Export JSON
+            </button>
+            <button
+              className="gen-debug-btn gen-debug-btn--setup"
+              onClick={() => fileInputRef.current.click()}
+            >
+              Import JSON
+            </button>
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json,application/json"
+            style={{ display: 'none' }}
+            onChange={handleImportFile}
+          />
         </div>
+        {importError && (
+          <div style={{ color: 'red', fontSize: 12, marginTop: 4 }}>
+            Import error: {importError}
+          </div>
+        )}
       </div>
 
       {debugEnabled && hasSnapshots && (

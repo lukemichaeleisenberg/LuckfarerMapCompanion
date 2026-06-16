@@ -210,6 +210,44 @@ body {
   background: #3a6a3a;
 }
 
+.gen-debug-cols {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.gen-debug-col {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gen-debug-seed-label {
+  font-size: 11px;
+  opacity: 0.75;
+  text-align: left;
+}
+
+.gen-debug-seed-input {
+  padding: 5px 10px;
+  border-radius: 5px;
+  border: 1px solid #4a5a9a;
+  background: #14141f;
+  color: #c8d8ff;
+  font-family: Georgia, serif;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+}
+
+.gen-debug-seed-input::placeholder {
+  color: #6a7a9a;
+}
+
+.gen-debug-seed-label code {
+  color: #c8d8ff;
+}
+
 .gen-debug-btn--generate {
   background: #2a3a6a;
   border: 1px solid #4a5a9a;
