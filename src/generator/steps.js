@@ -1,6 +1,6 @@
-import { createState, buildBiomeGroupings } from './state.js'
-import { axialToOffset } from '../core/hexGrid.js'
-import { pickOne, pickWeighted } from '../core/random.js'
+import { createState, buildBiomeGroupings } from './state'
+import { axialToOffset } from '../core/hexGrid'
+import { pickOne, pickWeighted } from '../core/random'
 import {
   SECONDARY_TYPES,
   WEIGHTED_PRIMARY_BIOMES,

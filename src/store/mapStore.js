@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { buildGrid, keyOf } from '../core/hexGrid.js'
+import { buildGrid, keyOf } from '../core/hexGrid'
 import { generateMap } from '../generator/generateMap.js'
 
 const DEFAULT_HEX = { mode: 'biome', primary: 'sea', secondary: 'sea' }

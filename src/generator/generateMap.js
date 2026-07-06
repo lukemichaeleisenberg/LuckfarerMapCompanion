@@ -5,7 +5,7 @@ import {
   placeFeatures,
   cleanupFeatures
 } from './steps.js'
-import { setSeed, randomSeed } from '../core/random.js'
+import { setSeed, randomSeed } from '../core/random'
 
 export const STEPS = [
   {

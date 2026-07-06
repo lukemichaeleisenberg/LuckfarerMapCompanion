@@ -5,8 +5,8 @@ import {
   offsetToAxial,
   filterNeighbors,
   countNeighbors
-} from '../core/hexGrid.js'
-import { pickOne, rollD20, shuffle } from '../core/random.js'
+} from '../core/hexGrid'
+import { pickOne, rollD20, shuffle } from '../core/random'
 
 export { pickOne }
 

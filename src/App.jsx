@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { BIOME_LOOKUP } from './core/biomes.js'
-import { keyOf } from './core/hexGrid.js'
+import { keyOf } from './core/hexGrid'
 import { useMapStore } from './store/mapStore.js'
 import HexCanvas from './components/HexCanvas.jsx'
 import PalettePanel from './components/control-panels/PalettePanel.jsx'

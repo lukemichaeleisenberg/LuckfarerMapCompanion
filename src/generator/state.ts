@@ -2,53 +2,23 @@
 // This object is threaded through every step. Each step receives it, mutates
 // or replaces fields, and returns the new state. Only `hexes` is returned to
 // the store; everything else is generation-time bookkeeping.
+//
+// The type definitions live in src/types.ts (HexState, BiomeGrouping,
+// MapGenState, …) so components and the store can import them too.
 
-/**
- * @typedef {Object} HexState
- * Either a biome hex:     { mode: 'biome', primary: string, secondary: string }
- * Or a special-type hex:  { mode: 'other', type: string }
- */
-
-/**
- * @typedef {Object} CoordinateModifier
- * @property {'x'|'y'} axis
- * @property {number}  offset
- */
-
-/**
- * @typedef {Object} HexShape
- * @property {string|null} secondary_biome   - rolled secondary type (or null pre-setup)
- * @property {string|null} combined_biome    - resolved BIOME_LOOKUP result (or null pre-setup)
- * @property {number}      count             - target hex count for this shape
- * @property {'clump'|'tendril'|'belt'} shape
- */
-
-/**
- * @typedef {Object} BiomeGrouping
- * @property {CoordinateModifier} coordinateModifier
- * @property {string|null}        primaryBiome       - e.g. 'arctic', 'sea' (null pre-setup)
- * @property {HexShape[]}         hexShapes          - 4 shapes: clump, tendril, belt, clump (final clump = base+1)
- */
-
-/**
- * @typedef {Object} MapGenState
- * @property {Object.<string, HexState>} hexes            - "q,r" → HexState
- * @property {BiomeGrouping[]}           biomeGroupings   - 4 entries
- * @property {Array<{q:number,r:number}>} headwaters
- */
+import type { BiomeGrouping, CoordinateModifier, MapGenState } from '../types'
 
 /** Returns a fresh, empty MapGenState. */
-export function createState () {
+export function createState (): MapGenState {
   return {
     hexes: {},
-    biomeGroupings: [],
-    headwaters: []
+    biomeGroupings: []
   }
 }
 
 /** Builds the 4 biome groupings with their coordinate modifiers and hex shapes. */
-export function buildBiomeGroupings () {
-  const configs = [
+export function buildBiomeGroupings (): BiomeGrouping[] {
+  const configs: Array<[CoordinateModifier, number]> = [
     [{ axis: 'x', offset: 0 }, 4],
     [{ axis: 'x', offset: -2 }, 8],
     [{ axis: 'y', offset: -2 }, 16],

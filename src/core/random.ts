@@ -5,12 +5,12 @@
 
 // Active source of randomness. Defaults to Math.random (unseeded). `setSeed`
 // replaces it with a deterministic mulberry32 stream.
-let rng = Math.random
-let activeSeed = null
+let rng: () => number = Math.random
+let activeSeed: string | null = null
 
 // Hash an arbitrary string into a 32-bit unsigned int (cyrb53-lite / xfnv1a).
 // Lets a seed be any human-readable string ("dragons", "test-3", a number…).
-function hashSeed (str) {
+function hashSeed (str: string): number {
   let h = 2166136261 >>> 0
   for (let i = 0; i < str.length; i++) {
     h ^= str.charCodeAt(i)
@@ -21,7 +21,7 @@ function hashSeed (str) {
 
 // mulberry32: tiny, fast, well-distributed 32-bit PRNG. Deterministic for a
 // given starting state.
-function mulberry32 (a) {
+function mulberry32 (a: number): () => number {
   return function () {
     a |= 0
     a = (a + 0x6d2b79f5) | 0
@@ -33,7 +33,7 @@ function mulberry32 (a) {
 
 // Seed the generator. Accepts any string or number; an empty/nullish seed
 // reverts to unseeded Math.random. Returns the normalized seed string used.
-export function setSeed (seed) {
+export function setSeed (seed: string | number | null | undefined): string | null {
   if (seed === null || seed === undefined || seed === '') {
     rng = Math.random
     activeSeed = null
@@ -47,23 +47,23 @@ export function setSeed (seed) {
 
 // Generate a fresh random seed string (used when the user generates without
 // specifying one, so every generation remains reproducible and recordable).
-export function randomSeed () {
+export function randomSeed (): string {
   return Math.floor(Math.random() * 0xffffffff).toString(36)
 }
 
 // The seed currently driving generation, or null when unseeded.
-export const getSeed = () => activeSeed
+export const getSeed = (): string | null => activeSeed
 
-export const pickOne = arr => arr[Math.floor(rng() * arr.length)]
+export const pickOne = <T,>(arr: readonly T[]): T => arr[Math.floor(rng() * arr.length)]
 
 // Weighted picks today rely on caller-provided arrays where weight = repetition
 // (e.g. WEIGHTED_PRIMARY_BIOMES). Kept as a separate name so the intent at the
 // call site is clear and so we can swap in a true weight-pair API later.
-export const pickWeighted = arr => pickOne(arr)
+export const pickWeighted = <T,>(arr: readonly T[]): T => pickOne(arr)
 
-export const rollD20 = () => 1 + Math.floor(rng() * 20)
+export const rollD20 = (): number => 1 + Math.floor(rng() * 20)
 
-export function shuffle (arr) {
+export function shuffle<T> (arr: readonly T[]): T[] {
   const a = [...arr]
   for (let i = a.length - 1; i > 0; i--) {
     const j = Math.floor(rng() * (i + 1))
