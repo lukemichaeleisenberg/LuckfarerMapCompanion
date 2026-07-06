@@ -2,7 +2,7 @@ import {
   PRIMARY_TYPES, SECONDARY_TYPES, OTHER_TYPES,
   TYPE_CATALOG, BIOME_CATALOG,
 } from '../../core/biomes.js'
-import { Section, TypeGrid } from './Controls.jsx'
+import { Section, TypeGrid } from './panelPrimitives.jsx'
 
 export default function PalettePanel({ activePrimary, activeSecondary, activeOther, onSelectPrimary, onSelectSecondary, onSelectOther }) {
   const sections = [

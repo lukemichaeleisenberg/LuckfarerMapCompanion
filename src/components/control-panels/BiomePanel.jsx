@@ -1,5 +1,5 @@
 import { BIOME_CATALOG } from '../../core/biomes.js'
-import { Section, TypeGrid } from './Controls.jsx'
+import { Section, TypeGrid } from './panelPrimitives.jsx'
 
 const SORTED_BIOMES = Object.keys(BIOME_CATALOG).sort((a, b) =>
   BIOME_CATALOG[a].name.localeCompare(BIOME_CATALOG[b].name)

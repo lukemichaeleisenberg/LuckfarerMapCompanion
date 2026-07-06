@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { BIOME_LOOKUP } from './core/biomes.js'
+import { resolveBiome } from './core/biomes.js'
 import { keyOf } from './core/hexGrid'
 import { useMapStore } from './store/mapStore.js'
 import HexCanvas from './components/HexCanvas.jsx'
@@ -29,9 +29,11 @@ export default function App() {
     setHex(key, newState)
   }
 
-  const activeBiome = activeOther
-    ? activeOther
-    : (BIOME_LOOKUP[activePrimary]?.[activeSecondary] ?? 'grassland')
+  const activeBiome = resolveBiome(
+    activeOther
+      ? { mode: 'other', type: activeOther }
+      : { mode: 'biome', primary: activePrimary, secondary: activeSecondary }
+  )
 
   return (
     <div className="app-layout">

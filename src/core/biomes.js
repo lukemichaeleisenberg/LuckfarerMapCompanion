@@ -144,171 +144,82 @@ export const BIOME_LOOKUP = {
   }
 }
 
-// ─── Display names ────────────────────────────────────────────────────────────
-export const BIOME_NAMES = {
+// ─── Catalogs: key → { name, color, stroke } ──────────────────────────────────
+export const BIOME_CATALOG = {
   // Pure primaries
-  arctic: 'Arctic',
-  coast: 'Coast',
-  desert: 'Desert',
-  forest: 'Forest',
-  grassland: 'Grassland',
-  mountain: 'Mountain',
-  swamp: 'Swamp',
-  sea: 'Sea',
+  arctic: { name: 'Arctic', color: '#ddeeff', stroke: '#aaccee' },
+  coast: { name: 'Coast', color: '#3bb8cc', stroke: '#1f8899' },
+  desert: { name: 'Desert', color: '#d4b483', stroke: '#b89050' },
+  forest: { name: 'Forest', color: '#2d6a2d', stroke: '#1a4a1a' },
+  grassland: { name: 'Grassland', color: '#7ec850', stroke: '#5a9e38' },
+  mountain: { name: 'Mountain', color: '#9e9e9e', stroke: '#606060' },
+  swamp: { name: 'Swamp', color: '#4a6b3d', stroke: '#2a4a20' },
+  sea: { name: 'Sea', color: '#1a4fa0', stroke: '#0a2f70' },
   // Arctic blends
-  floes: 'Floes',
-  ice_sheet: 'Ice Sheet',
-  taiga: 'Taiga',
-  tundra: 'Tundra',
-  glacier: 'Glacier',
-  fens: 'Fens',
+  floes: { name: 'Floes', color: '#a0cce0', stroke: '#6090b0' },
+  ice_sheet: { name: 'Ice Sheet', color: '#e4f0dc', stroke: '#a8c0a0' },
+  taiga: { name: 'Taiga', color: '#3a6b4a', stroke: '#1a4030' },
+  tundra: { name: 'Tundra', color: '#8ab895', stroke: '#508860' },
+  glacier: { name: 'Glacier', color: '#b8d0e0', stroke: '#7898b0' },
+  fens: { name: 'Fens', color: '#6a8870', stroke: '#385848' },
   // Coast blends
-  sandbar: 'Sandbar',
-  riviera: 'Riviera',
-  chaparral: 'Chaparral',
-  fjords: 'Fjords',
-  bayou: 'Bayou',
+  sandbar: { name: 'Sandbar', color: '#d4c870', stroke: '#a09040' },
+  riviera: { name: 'Riviera', color: '#3aaa70', stroke: '#1a7a48' },
+  chaparral: { name: 'Chaparral', color: '#9aba60', stroke: '#607838' },
+  fjords: { name: 'Fjords', color: '#5888a0', stroke: '#285878' },
+  bayou: { name: 'Bayou', color: '#508870', stroke: '#205848' },
   // Desert blends
-  savanna: 'Savanna',
-  shrubland: 'Shrubland',
-  mesa: 'Mesa',
-  oasis: 'Oasis',
+  savanna: { name: 'Savanna', color: '#c8a040', stroke: '#987020' },
+  shrubland: { name: 'Shrubland', color: '#b8a860', stroke: '#807038' },
+  mesa: { name: 'Mesa', color: '#c86040', stroke: '#a03818' },
+  oasis: { name: 'Oasis', color: '#70b848', stroke: '#388828' },
   // Forest blends
-  woodland: 'Woodland',
-  alpine_forest: 'Alpine Forest',
-  rainforest: 'Rainforest',
+  woodland: { name: 'Woodland', color: '#5aa040', stroke: '#307020' },
+  alpine_forest: { name: 'Alpine Forest', color: '#386858', stroke: '#184838' },
+  rainforest: { name: 'Rainforest', color: '#1a5822', stroke: '#083810' },
   // Grassland blends
-  steppe: 'Steppe',
-  marsh: 'Marsh',
+  steppe: { name: 'Steppe', color: '#b0a870', stroke: '#807848' },
+  marsh: { name: 'Marsh', color: '#78a858', stroke: '#407830' },
   // Mountain blends
-  cloud_forest: 'Cloud Forest',
+  cloud_forest: { name: 'Cloud Forest', color: '#5a7858', stroke: '#284838' },
   // Hill variants
-  arctic_hill: 'Arctic Hill',
-  coast_hill: 'Coast Hill',
-  desert_hill: 'Desert Hill',
-  forest_hill: 'Forest Hill',
-  grassland_hill: 'Grassland Hill',
-  mountain_hill: 'Mountain Hill',
-  swamp_hill: 'Swamp Hill',
+  arctic_hill: { name: 'Arctic Hill', color: '#c0d8e8', stroke: '#88b0c8' },
+  coast_hill: { name: 'Coast Hill', color: '#5098b0', stroke: '#206888' },
+  desert_hill: { name: 'Desert Hill', color: '#c8906a', stroke: '#a06040' },
+  forest_hill: { name: 'Forest Hill', color: '#3a7838', stroke: '#185018' },
+  grassland_hill: { name: 'Grassland Hill', color: '#90b860', stroke: '#608838' },
+  mountain_hill: { name: 'Mountain Hill', color: '#707878', stroke: '#404848' },
+  swamp_hill: { name: 'Swamp Hill', color: '#508060', stroke: '#204830' },
   // Wasteland
-  wasteland: 'Wasteland',
+  wasteland: { name: 'Wasteland', color: '#a08060', stroke: '#705840' },
   // Other
-  lake: 'Lake',
-  urban: 'Urban',
-  navigable_river: 'Navigable River',
-  shallow_river: 'Shallow River',
-  rapids: 'Rapids',
-  underdark: 'Underdark'
+  lake: { name: 'Lake', color: '#4898d0', stroke: '#1868a0' },
+  urban: { name: 'Urban', color: '#808888', stroke: '#505858' },
+  navigable_river: { name: 'Navigable River', color: '#4888c8', stroke: '#1858a0' },
+  shallow_river: { name: 'Shallow River', color: '#80c0d8', stroke: '#4890a8' },
+  rapids: { name: 'Rapids', color: '#b0e0f0', stroke: '#78c0d8' },
+  underdark: { name: 'Underdark', color: '#1e1028', stroke: '#0a0818' }
 }
 
-// Display names for primary/secondary type selector buttons
-export const TYPE_NAMES = {
-  arctic: 'Arctic',
-  coast: 'Coast',
-  desert: 'Desert',
-  forest: 'Forest',
-  grassland: 'Grassland',
-  mountain: 'Mountain',
-  swamp: 'Swamp',
-  sea: 'Sea',
-  hill: 'Hill',
-  wasteland: 'Wasteland'
-}
-
-// ─── Colors ───────────────────────────────────────────────────────────────────
-export const BIOME_COLORS = {
-  arctic: '#ddeeff',
-  coast: '#3bb8cc',
-  desert: '#d4b483',
-  forest: '#2d6a2d',
-  grassland: '#7ec850',
-  mountain: '#9e9e9e',
-  swamp: '#4a6b3d',
-  sea: '#1a4fa0',
-  floes: '#a0cce0',
-  ice_sheet: '#e4f0dc',
-  taiga: '#3a6b4a',
-  tundra: '#8ab895',
-  glacier: '#b8d0e0',
-  fens: '#6a8870',
-  sandbar: '#d4c870',
-  riviera: '#3aaa70',
-  chaparral: '#9aba60',
-  fjords: '#5888a0',
-  bayou: '#508870',
-  savanna: '#c8a040',
-  shrubland: '#b8a860',
-  mesa: '#c86040',
-  oasis: '#70b848',
-  woodland: '#5aa040',
-  alpine_forest: '#386858',
-  rainforest: '#1a5822',
-  steppe: '#b0a870',
-  marsh: '#78a858',
-  cloud_forest: '#5a7858',
-  arctic_hill: '#c0d8e8',
-  coast_hill: '#5098b0',
-  desert_hill: '#c8906a',
-  forest_hill: '#3a7838',
-  grassland_hill: '#90b860',
-  mountain_hill: '#707878',
-  swamp_hill: '#508060',
-  wasteland: '#a08060',
-  lake: '#4898d0',
-  urban: '#808888',
-  navigable_river: '#4888c8',
-  shallow_river: '#80c0d8',
-  rapids: '#b0e0f0',
-  underdark: '#1e1028'
-}
-
-export const BIOME_STROKE = {
-  arctic: '#aaccee',
-  coast: '#1f8899',
-  desert: '#b89050',
-  forest: '#1a4a1a',
-  grassland: '#5a9e38',
-  mountain: '#606060',
-  swamp: '#2a4a20',
-  sea: '#0a2f70',
-  floes: '#6090b0',
-  ice_sheet: '#a8c0a0',
-  taiga: '#1a4030',
-  tundra: '#508860',
-  glacier: '#7898b0',
-  fens: '#385848',
-  sandbar: '#a09040',
-  riviera: '#1a7a48',
-  chaparral: '#607838',
-  fjords: '#285878',
-  bayou: '#205848',
-  savanna: '#987020',
-  shrubland: '#807038',
-  mesa: '#a03818',
-  oasis: '#388828',
-  woodland: '#307020',
-  alpine_forest: '#184838',
-  rainforest: '#083810',
-  steppe: '#807848',
-  marsh: '#407830',
-  cloud_forest: '#284838',
-  arctic_hill: '#88b0c8',
-  coast_hill: '#206888',
-  desert_hill: '#a06040',
-  forest_hill: '#185018',
-  grassland_hill: '#608838',
-  mountain_hill: '#404848',
-  swamp_hill: '#204830',
-  wasteland: '#705840',
-  lake: '#1868a0',
-  urban: '#505858',
-  navigable_river: '#1858a0',
-  shallow_river: '#4890a8',
-  rapids: '#78c0d8',
-  underdark: '#0a0818'
+// Primary/secondary type selector buttons: name + representative fill color
+export const TYPE_CATALOG = {
+  arctic: { name: 'Arctic', color: '#ddeeff' },
+  coast: { name: 'Coast', color: '#3bb8cc' },
+  desert: { name: 'Desert', color: '#d4b483' },
+  forest: { name: 'Forest', color: '#2d6a2d' },
+  grassland: { name: 'Grassland', color: '#7ec850' },
+  mountain: { name: 'Mountain', color: '#9e9e9e' },
+  swamp: { name: 'Swamp', color: '#4a6b3d' },
+  sea: { name: 'Sea', color: '#1a4fa0' },
+  hill: { name: 'Hill', color: '#b0a870' },
+  wasteland: { name: 'Wasteland', color: '#a08060' }
 }
 
 // ─── Logic ───────────────────────────────────────────────────────────────────
+// Canonical empty-water hex. Hexes are mutated in place, so spread-copy at use
+// sites rather than sharing this object.
+export const SEA_HEX = { mode: 'biome', primary: 'sea', secondary: 'sea' }
+
 export function resolveBiome (hexState) {
   if (hexState.mode === 'other') return hexState.type
   return BIOME_LOOKUP[hexState.primary]?.[hexState.secondary] ?? 'sea'
@@ -326,31 +237,3 @@ export function deriveSecondaryBiome ({ primaryBiome, rolledSecondary, isFirstSh
   return { secondary, combined }
 }
 
-// Representative fill color for each primary/secondary type selector button
-export const TYPE_COLORS = {
-  arctic: '#ddeeff',
-  coast: '#3bb8cc',
-  desert: '#d4b483',
-  forest: '#2d6a2d',
-  grassland: '#7ec850',
-  mountain: '#9e9e9e',
-  swamp: '#4a6b3d',
-  sea: '#1a4fa0',
-  hill: '#b0a870',
-  wasteland: '#a08060'
-}
-
-// ─── Merged catalogs ──────────────────────────────────────────────────────────
-// Each entry: { name, color } — for biomes also includes stroke.
-export const TYPE_CATALOG = Object.fromEntries(
-  Object.keys(TYPE_NAMES).map(k => [
-    k,
-    { name: TYPE_NAMES[k], color: TYPE_COLORS[k] }
-  ])
-)
-export const BIOME_CATALOG = Object.fromEntries(
-  Object.keys(BIOME_NAMES).map(k => [
-    k,
-    { name: BIOME_NAMES[k], color: BIOME_COLORS[k], stroke: BIOME_STROKE[k] }
-  ])
-)

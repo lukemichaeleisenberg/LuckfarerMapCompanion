@@ -29,26 +29,26 @@ export function buildBiomeGroupings (): BiomeGrouping[] {
     primaryBiome: null,
     hexShapes: [
       {
-        secondary_biome: null,
-        combined_biome: null,
+        secondaryBiome: null,
+        combinedBiome: null,
         count: base,
         shape: 'clump'
       },
       {
-        secondary_biome: null,
-        combined_biome: null,
+        secondaryBiome: null,
+        combinedBiome: null,
         count: base,
         shape: 'tendril'
       },
       {
-        secondary_biome: null,
-        combined_biome: null,
+        secondaryBiome: null,
+        combinedBiome: null,
         count: base,
         shape: 'belt'
       },
       {
-        secondary_biome: null,
-        combined_biome: null,
+        secondaryBiome: null,
+        combinedBiome: null,
         count: base + 1,
         shape: 'clump'
       }

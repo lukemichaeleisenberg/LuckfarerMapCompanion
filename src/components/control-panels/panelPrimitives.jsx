@@ -1,5 +1,6 @@
 // ─── Shared UI primitives used by toolbar panels ──────────────────────────────
 
+// eslint-disable-next-line react-refresh/only-export-components -- one consumer doesn't justify a util module yet
 export function isLight(hex) {
   const r = parseInt(hex.slice(1, 3), 16)
   const g = parseInt(hex.slice(3, 5), 16)

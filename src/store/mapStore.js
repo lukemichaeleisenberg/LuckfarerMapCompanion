@@ -1,13 +1,12 @@
 import { create } from 'zustand'
 import { buildGrid, keyOf } from '../core/hexGrid'
+import { SEA_HEX } from '../core/biomes.js'
 import { generateMap } from '../generator/generateMap.js'
-
-const DEFAULT_HEX = { mode: 'biome', primary: 'sea', secondary: 'sea' }
 
 function initHexMap () {
   const m = {}
   for (const hex of buildGrid()) {
-    m[keyOf(hex.q, hex.r)] = { ...DEFAULT_HEX }
+    m[keyOf(hex.q, hex.r)] = { ...SEA_HEX }
   }
   return m
 }
@@ -15,7 +14,6 @@ function initHexMap () {
 export const useMapStore = create((set, get) => ({
   hexMap: initHexMap(),
   generatorState: null,
-  isGenerating: false,
   snapshots: [],
   currentStep: -1,
   seed: null,
@@ -32,8 +30,7 @@ export const useMapStore = create((set, get) => ({
       seed: null
     }),
 
-  generateMap: (seed) => {
-    set({ isGenerating: true })
+  runGeneration: (seed) => {
     const { snapshots, seed: usedSeed } = generateMap(get().hexMap, seed)
     const last = snapshots[snapshots.length - 1]
     set({
@@ -41,8 +38,7 @@ export const useMapStore = create((set, get) => ({
       currentStep: snapshots.length - 1,
       hexMap: last.state.hexes,
       generatorState: last.state,
-      seed: usedSeed,
-      isGenerating: false
+      seed: usedSeed
     })
   },
 

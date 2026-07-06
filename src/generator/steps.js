@@ -2,6 +2,7 @@ import { createState, buildBiomeGroupings } from './state'
 import { axialToOffset } from '../core/hexGrid'
 import { pickOne, pickWeighted } from '../core/random'
 import {
+  SEA_HEX,
   SECONDARY_TYPES,
   WEIGHTED_PRIMARY_BIOMES,
   deriveSecondaryBiome
@@ -35,10 +36,10 @@ export function setupGrid (existingHexMap) {
         primaryBiome: grouping.primaryBiome,
         rolledSecondary: pickOne(SECONDARY_TYPES),
         isFirstShape: idx === 0,
-        prevSecondary: prevShape?.secondary_biome
+        prevSecondary: prevShape?.secondaryBiome
       })
-      hexShape.secondary_biome = secondary
-      hexShape.combined_biome = combined
+      hexShape.secondaryBiome = secondary
+      hexShape.combinedBiome = combined
       prevShape = hexShape
     })
   }
@@ -65,10 +66,10 @@ export function placeBiomes (state, onStep) {
 
     for (let round = 0; round < ROUNDS; round++) {
       const hexShape = pickOne(grouping.hexShapes)
-      const { start, originText } = pickStartHex(state, grouping, lastHex, findStart)
+      const { start, origin } = pickStartHex(state, grouping, lastHex, findStart)
 
       // randomFirstStep only applies when we rolled (not chaining from lastHex)
-      const randomFirstStep = !lastHex || !start?.dir || originText.startsWith('Rolled')
+      const randomFirstStep = origin.kind === 'rolled'
       const {
         placed,
         lastHex: newLastHex,
@@ -89,7 +90,7 @@ export function placeBiomes (state, onStep) {
           start,
           newLastHex,
           firstDir,
-          originText
+          origin
         }),
         state
       })
@@ -100,31 +101,34 @@ export function placeBiomes (state, onStep) {
 }
 
 // First shape ever: roll. All subsequent shapes: try steps 1 → 2 → fall back to roll.
+// Returns { start, origin } where origin is one of:
+//   { kind: 'rolled', rerolls } | { kind: 'adjacent', dir } | { kind: 'line', dir }
 function pickStartHex (state, grouping, lastHex, findStart) {
-  if (!lastHex) {
-    const { start, rerolls } = findStart(grouping)
-    return { start, originText: rolledOriginText(rerolls) }
-  }
-
-  const found = findStartFromHex(state.hexes, lastHex)
-  if (found) {
-    const originText = found.step === 1
-      ? `Adjacent ${found.hex.dir}`
-      : `Line ${found.hex.dir}`
-    return { start: found.hex, originText }
+  if (lastHex) {
+    const found = findStartFromHex(state.hexes, lastHex)
+    if (found) {
+      const kind = found.step === 1 ? 'adjacent' : 'line'
+      return { start: found.hex, origin: { kind, dir: found.hex.dir } }
+    }
   }
 
   const { start, rerolls } = findStart(grouping)
-  return { start, originText: rolledOriginText(rerolls) }
+  return { start, origin: { kind: 'rolled', rerolls } }
 }
 
-const rolledOriginText = rerolls =>
-  `Rolled ${rerolls} reroll${rerolls === 1 ? '' : 's'}`
+function originTextOf (origin) {
+  switch (origin.kind) {
+    case 'adjacent': return `Adjacent ${origin.dir}`
+    case 'line': return `Line ${origin.dir}`
+    default:
+      return `Rolled ${origin.rerolls} reroll${origin.rerolls === 1 ? '' : 's'}`
+  }
+}
 
 function formatPlacementStep ({
   g, totalGroups, grouping, hexShape,
   placed, placedShapes, totalShapes,
-  start, newLastHex, firstDir, originText
+  start, newLastHex, firstDir, origin
 }) {
   const startOff = start ? axialToOffset(start) : null
   const endOff = newLastHex ? axialToOffset(newLastHex) : null
@@ -133,10 +137,10 @@ function formatPlacementStep ({
   const continuedText = firstDir ? ` and continued ${firstDir}` : ''
 
   return {
-    label: `Place ${hexShape.shape}: ${hexShape.combined_biome}`,
+    label: `Place ${hexShape.shape}: ${hexShape.combinedBiome}`,
     description:
       `Group ${g + 1} of ${totalGroups} (${grouping.primaryBiome}). ` +
-      `${originText}. Placed ${placed} ${hexShape.combined_biome} hexes ` +
+      `${originTextOf(origin)}. Placed ${placed} ${hexShape.combinedBiome} hexes ` +
       `as a ${hexShape.shape} starting from ${startText}${continuedText}, ` +
       `ending at ${endText}. ` +
       `Shape ${placedShapes} of ${totalShapes}.`
@@ -151,7 +155,7 @@ function formatPlacementStep ({
 export function cleanupBiomes (state) {
   for (const key of Object.keys(state.hexes)) {
     if (state.hexes[key] === null) {
-      state.hexes[key] = { mode: 'biome', primary: 'sea', secondary: 'sea' }
+      state.hexes[key] = { ...SEA_HEX }
     }
   }
 

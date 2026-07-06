@@ -5,7 +5,7 @@ export default function GenerationDebug() {
   const generatorState   = useMapStore(s => s.generatorState)
   const snapshots        = useMapStore(s => s.snapshots)
   const currentStep      = useMapStore(s => s.currentStep)
-  const runGenerate      = useMapStore(s => s.generateMap)
+  const runGenerate      = useMapStore(s => s.runGeneration)
   const stepForward      = useMapStore(s => s.stepForward)
   const stepBackward     = useMapStore(s => s.stepBackward)
   const goToStep         = useMapStore(s => s.goToStep)

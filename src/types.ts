@@ -33,9 +33,9 @@ export interface CoordinateModifier {
 export type ShapeKind = 'clump' | 'tendril' | 'belt'
 
 export interface HexShape {
-  secondary_biome: string | null   // rolled secondary type (or null pre-setup)
-  combined_biome: string | null    // resolved BIOME_LOOKUP result (or null pre-setup)
-  count: number                    // target hex count for this shape
+  secondaryBiome: string | null   // rolled secondary type (or null pre-setup)
+  combinedBiome: string | null    // resolved BIOME_LOOKUP result (or null pre-setup)
+  count: number                   // target hex count for this shape
   shape: ShapeKind
 }
 

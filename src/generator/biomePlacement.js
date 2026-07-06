@@ -8,14 +8,12 @@ import {
 } from '../core/hexGrid'
 import { pickOne, rollD20, shuffle } from '../core/random'
 
-export { pickOne }
-
 export function placeOneShape (state, grouping, hexShape, start, randomFirstStep = true) {
   if (!start) return { placed: 0, lastHex: null }
 
   const biome = {
     primary: grouping.primaryBiome,
-    secondary: hexShape.secondary_biome
+    secondary: hexShape.secondaryBiome
   }
 
   writeHex(state, start, biome)
