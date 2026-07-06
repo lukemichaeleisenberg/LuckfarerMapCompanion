@@ -69,6 +69,10 @@ body {
   flex-direction: column;
   gap: 14px;
   padding: 24px 16px 16px;
+  position: sticky;
+  top: 0;
+  max-height: 100vh;
+  overflow-y: auto;
 }
 
 /* ── Header ── */
@@ -402,5 +406,8 @@ body {
 
   .panel {
     width: 100%;
+    position: static;
+    max-height: none;
+    overflow-y: visible;
   }
 }
