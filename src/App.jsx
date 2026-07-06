@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { resolveBiome } from './core/biomes.js'
+import { combineBiomes } from './core/biomes.js'
 import { keyOf } from './core/hexGrid'
 import { useMapStore } from './store/mapStore.js'
 import HexCanvas from './components/HexCanvas.jsx'
@@ -21,19 +21,11 @@ export default function App() {
   function selectSecondary(s) { setActiveSecondary(s); setActiveOther(null) }
   function selectOther(t)     { setActiveOther(t) }
 
-  function handleHexClick(hex) {
-    const key = keyOf(hex.q, hex.r)
-    const newState = activeOther
-      ? { mode: 'other', type: activeOther }
-      : { mode: 'biome', primary: activePrimary, secondary: activeSecondary }
-    setHex(key, newState)
-  }
+  const activeBiome = activeOther ?? combineBiomes(activePrimary, activeSecondary)
 
-  const activeBiome = resolveBiome(
-    activeOther
-      ? { mode: 'other', type: activeOther }
-      : { mode: 'biome', primary: activePrimary, secondary: activeSecondary }
-  )
+  function handleHexClick(hex) {
+    setHex(keyOf(hex.q, hex.r), { biome: activeBiome })
+  }
 
   return (
     <div className="app-layout">

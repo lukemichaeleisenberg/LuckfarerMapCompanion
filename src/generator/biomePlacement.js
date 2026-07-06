@@ -1,22 +1,21 @@
 import {
   DIRECTIONS,
+  GRID_COLS,
+  GRID_ROWS,
   step,
   keyOf,
   offsetToAxial,
   filterNeighbors,
   countNeighbors
 } from '../core/hexGrid'
-import { pickOne, rollD20, shuffle } from '../core/random'
+import { pickOne, rollD, shuffle } from '../core/random'
 
 export function placeOneShape (state, grouping, hexShape, start, randomFirstStep = true) {
   if (!start) return { placed: 0, lastHex: null }
 
-  const biome = {
-    primary: grouping.primaryBiome,
-    secondary: hexShape.secondaryBiome
-  }
-
-  writeHex(state, start, biome)
+  const biome = hexShape.combinedBiome
+  const shape = registerShape(state, grouping, hexShape, start)
+  writeHex(state, start, biome, shape)
   let previous = start
   let placed = 1
   let firstDir = null
@@ -34,7 +33,7 @@ export function placeOneShape (state, grouping, hexShape, start, randomFirstStep
       next = pickByStrategy(state.hexes, candidates, biome, strategy)
     }
 
-    writeHex(state, next, biome)
+    writeHex(state, next, biome, shape)
     previous = next
   }
 
@@ -81,17 +80,27 @@ const onGrid = (hexes, q, r) =>
 const isEmpty = (hexes, q, r) =>
   onGrid(hexes, q, r) && hexes[keyOf(q, r)] === null
 
-function writeHex (state, { q, r }, biome) {
-  state.hexes[keyOf(q, r)] = {
-    mode: 'biome',
-    primary: biome.primary,
-    secondary: biome.secondary
+function registerShape (state, grouping, hexShape, origin) {
+  const shape = {
+    id: state.nextShapeId++,
+    kind: hexShape.shape,
+    groupingIndex: state.biomeGroupings.indexOf(grouping),
+    origin: { q: origin.q, r: origin.r },
+    hexKeys: []
   }
+  state.shapes[shape.id] = shape
+  return shape
+}
+
+function writeHex (state, { q, r }, biome, shape) {
+  const key = keyOf(q, r)
+  state.hexes[key] = { biome, shapeId: shape.id }
+  shape.hexKeys.push(key)
 }
 
 function rollCoordinate (coordinateModifier) {
-  let x = rollD20()
-  let y = rollD20()
+  let x = rollD(GRID_COLS)
+  let y = rollD(GRID_ROWS)
   if (coordinateModifier.axis === 'x') x += coordinateModifier.offset
   else y += coordinateModifier.offset
   return offsetToAxial(x, y)
@@ -117,11 +126,7 @@ function strategyFor (shape, indexPlaced, totalCount) {
 }
 
 function sameBiomeNeighborCount (hexes, q, r, biome) {
-  return countNeighbors(hexes, q, r, h =>
-    h?.mode === 'biome' &&
-    h.primary === biome.primary &&
-    h.secondary === biome.secondary
-  )
+  return countNeighbors(hexes, q, r, h => h?.biome === biome)
 }
 
 function pickByStrategy (hexes, candidates, biome, strategy) {

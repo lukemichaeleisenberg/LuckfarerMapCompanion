@@ -1,7 +1,7 @@
 import { useMemo, useState, useRef, useEffect } from 'react'
 import { Stage, Layer, RegularPolygon } from 'react-konva'
 import { buildGrid, HEX_X_RADIUS, HEX_Y_RADIUS, HEX_SIZE, keyOf } from '../core/hexGrid'
-import { BIOME_CATALOG, resolveBiome } from '../core/biomes.js'
+import { BIOME_CATALOG } from '../core/biomes.js'
 
 export default function HexCanvas({ hexMap, onHexClick }) {
   const grid  = useMemo(() => buildGrid(), [])
@@ -40,7 +40,7 @@ export default function HexCanvas({ hexMap, onHexClick }) {
             const key = keyOf(hex.q, hex.r)
             const state = hexMap[key]
             const isUnassigned = state == null
-            const biome = isUnassigned ? null : resolveBiome(state)
+            const biome = isUnassigned ? null : state.biome
             const color  = isUnassigned ? '#2a2a35' : BIOME_CATALOG[biome].color
             const stroke = isUnassigned ? '#3a3a45' : BIOME_CATALOG[biome].stroke
             const cx = hex.x + HEX_X_RADIUS

@@ -218,11 +218,10 @@ export const TYPE_CATALOG = {
 // ─── Logic ───────────────────────────────────────────────────────────────────
 // Canonical empty-water hex. Hexes are mutated in place, so spread-copy at use
 // sites rather than sharing this object.
-export const SEA_HEX = { mode: 'biome', primary: 'sea', secondary: 'sea' }
+export const SEA_HEX = { biome: 'sea' }
 
-export function resolveBiome (hexState) {
-  if (hexState.mode === 'other') return hexState.type
-  return BIOME_LOOKUP[hexState.primary]?.[hexState.secondary] ?? 'sea'
+export function combineBiomes (primary, secondary) {
+  return BIOME_LOOKUP[primary]?.[secondary] ?? 'sea'
 }
 
 // Derive the secondary + combined biome for a shape, applying special rules:
@@ -233,7 +232,6 @@ export function deriveSecondaryBiome ({ primaryBiome, rolledSecondary, isFirstSh
   let secondary = rolledSecondary
   if (isFirstShape && primaryBiome === 'mountain') secondary = 'hill'
   if (prevSecondary === 'mountain') secondary = 'hill'
-  const combined = BIOME_LOOKUP[primaryBiome]?.[secondary] ?? primaryBiome
-  return { secondary, combined }
+  return { secondary, combined: combineBiomes(primaryBiome, secondary) }
 }
 

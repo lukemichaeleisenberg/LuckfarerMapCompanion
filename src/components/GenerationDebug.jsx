@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useMapStore } from '../store/mapStore.js'
 
+const EXPORT_FORMAT_VERSION = 2  // v1 = pre-Phase-0 hex shape { mode, primary, secondary }
+
 export default function GenerationDebug() {
   const generatorState   = useMapStore(s => s.generatorState)
   const snapshots        = useMapStore(s => s.snapshots)
@@ -30,7 +32,7 @@ export default function GenerationDebug() {
 
   function handleExport() {
     const data = {
-      version: 1,
+      version: EXPORT_FORMAT_VERSION,
       exportedAt: new Date().toISOString(),
       seed,
       snapshots
@@ -53,6 +55,9 @@ export default function GenerationDebug() {
     reader.onload = (ev) => {
       try {
         const data = JSON.parse(ev.target.result)
+        if (data.version !== EXPORT_FORMAT_VERSION) {
+          throw new Error(`Unsupported version ${data.version}: hex format changed in v${EXPORT_FORMAT_VERSION} — re-export from a current build`)
+        }
         if (!Array.isArray(data.snapshots) || data.snapshots.length === 0) {
           throw new Error('Invalid format: missing snapshots array')
         }

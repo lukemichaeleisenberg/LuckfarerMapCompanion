@@ -12,7 +12,10 @@ import type { BiomeGrouping, CoordinateModifier, MapGenState } from '../types'
 export function createState (): MapGenState {
   return {
     hexes: {},
-    biomeGroupings: []
+    biomeGroupings: [],
+    shapes: {},
+    nextShapeId: 1,
+    latitude: null
   }
 }
 

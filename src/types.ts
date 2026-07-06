@@ -16,10 +16,29 @@ export interface Offset {
 
 export type Direction = 'NE' | 'E' | 'SE' | 'SW' | 'W' | 'NW'
 
-// Either a biome hex or a special-type hex (e.g. river, landmark).
-export type HexState =
-  | { mode: 'biome', primary: string, secondary: string }
-  | { mode: 'other', type: string }
+export type Latitude = 'equatorial' | 'temperate' | 'polar'
+
+// Persistent hex markers that survive biome changes. Stored as a plain array
+// (set semantics enforced by core/tags.ts) so hexes stay JSON-serializable.
+export type Tag =
+  | 'Open Water'
+  | 'Shoreline'
+  | 'Settlement'
+  | 'Altitude'
+  | 'Road'
+  | 'Inlet'
+  | 'Riverway'
+  | 'Inland'
+
+// A placed hex. `biome` is a BIOME_CATALOG key; anything derivable from it
+// (components, colors, names) lives in the catalog, not on the hex.
+// `shapeId` is absent on hexes not placed as part of a shape (e.g. sea fill).
+// Biome changes mutate `biome` in place so `tags` and `shapeId` persist.
+export interface HexState {
+  biome: string
+  shapeId?: number
+  tags?: Tag[]
+}
 
 // "q,r" → HexState. `null` marks an explicitly empty cell; missing keys are
 // off-grid or unvisited.
@@ -45,10 +64,23 @@ export interface BiomeGrouping {
   hexShapes: HexShape[]            // 4 shapes: clump, tendril, belt, clump (final clump = base+1)
 }
 
+// Identity and membership of one placed shape, so later steps can operate on
+// "that shape" after placement.
+export interface ShapeRecord {
+  id: number
+  kind: ShapeKind
+  groupingIndex: number            // index into MapGenState.biomeGroupings
+  origin: Axial                    // first hex placed for this shape
+  hexKeys: string[]                // "q,r" keys of every hex in the shape
+}
+
 // Threaded through every generator step. Each step receives it, mutates or
 // replaces fields, and returns the new state. Only `hexes` is returned to the
 // store; everything else is generation-time bookkeeping.
 export interface MapGenState {
   hexes: HexMap
   biomeGroupings: BiomeGrouping[]
+  shapes: Record<number, ShapeRecord>
+  nextShapeId: number
+  latitude: Latitude | null        // rolled during setup (null pre-roll)
 }

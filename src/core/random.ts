@@ -61,7 +61,11 @@ export const pickOne = <T,>(arr: readonly T[]): T => arr[Math.floor(rng() * arr.
 // call site is clear and so we can swap in a true weight-pair API later.
 export const pickWeighted = <T,>(arr: readonly T[]): T => pickOne(arr)
 
-export const rollD20 = (): number => 1 + Math.floor(rng() * 20)
+/** Roll a die: uniform integer in [1, n]. */
+export const rollD = (n: number): number => 1 + Math.floor(rng() * n)
+
+/** True `pct` percent of the time (e.g. chance(25) for the spec's "25% roll"). */
+export const chance = (pct: number): boolean => rng() * 100 < pct
 
 export function shuffle<T> (arr: readonly T[]): T[] {
   const a = [...arr]

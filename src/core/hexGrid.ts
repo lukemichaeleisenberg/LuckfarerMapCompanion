@@ -44,6 +44,23 @@ export function step (q: number, r: number, dir: Direction): Axial {
   return { q: q + d.q, r: r + d.r }
 }
 
+export const OPPOSITE: Record<Direction, Direction> = {
+  NE: 'SW',
+  E: 'W',
+  SE: 'NW',
+  SW: 'NE',
+  W: 'E',
+  NW: 'SE'
+}
+
+export const oppositeOf = (dir: Direction): Direction => OPPOSITE[dir]
+
+// Anti-spiral rule for river tracing: rolling a direction removes its
+// opposite from the remaining direction pool.
+export function removeOpposite (pool: readonly Direction[], rolled: Direction): Direction[] {
+  return pool.filter(d => d !== oppositeOf(rolled))
+}
+
 // ─── Axial / offset coordinate conversion ────────────────────────────────────
 export function offsetToAxial (col1Indexed: number, row1Indexed: number): Axial {
   const hex = new PointyHex({ col: col1Indexed - 1, row: row1Indexed - 1 })
