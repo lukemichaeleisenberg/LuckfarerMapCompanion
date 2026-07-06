@@ -186,7 +186,7 @@ export const BIOME_CATALOG = {
   arctic_hill: { name: 'Arctic Hill', color: '#c0d8e8', stroke: '#88b0c8' },
   coast_hill: { name: 'Coast Hill', color: '#5098b0', stroke: '#206888' },
   desert_hill: { name: 'Desert Hill', color: '#c8906a', stroke: '#a06040' },
-  forest_hill: { name: 'Forest Hill', color: '#3a7838', stroke: '#185018' },
+  forest_hill: { name: 'Forest Hill', color: '#7d9440', stroke: '#50661c' },
   grassland_hill: { name: 'Grassland Hill', color: '#90b860', stroke: '#608838' },
   mountain_hill: { name: 'Mountain Hill', color: '#707878', stroke: '#404848' },
   swamp_hill: { name: 'Swamp Hill', color: '#508060', stroke: '#204830' },
@@ -198,7 +198,60 @@ export const BIOME_CATALOG = {
   navigable_river: { name: 'Navigable River', color: '#4888c8', stroke: '#1858a0' },
   shallow_river: { name: 'Shallow River', color: '#80c0d8', stroke: '#4890a8' },
   rapids: { name: 'Rapids', color: '#b0e0f0', stroke: '#78c0d8' },
-  underdark: { name: 'Underdark', color: '#1e1028', stroke: '#0a0818' }
+  underdark: { name: 'Underdark', color: '#1e1028', stroke: '#0a0818' },
+  // Named hills (replace the generic *_hill keys once Phase 1 swaps the
+  // matrix hill row; forest_hill above is already the named form)
+  snowy_hills: { name: 'Snowy Hills', color: '#d0e0e8', stroke: '#98b8c8' },
+  sea_cliffs: { name: 'Sea Cliffs', color: '#6090a8', stroke: '#306078' },
+  plateau: { name: 'Plateau', color: '#c89060', stroke: '#986030' },
+  rolling_hills: { name: 'Rolling Hills', color: '#a4c470', stroke: '#709038' },
+  highlands: { name: 'Highlands', color: '#889078', stroke: '#586048' },
+  geyser_basin: { name: 'Geyser Basin', color: '#c0a8a0', stroke: '#907068' },
+  // Combined-matrix additions (July revision)
+  salt_pans: { name: 'Salt Pans', color: '#e8e4d8', stroke: '#b0aca0' },
+  kelp_forest: { name: 'Kelp Forest', color: '#2e7862', stroke: '#105040' },
+  reef: { name: 'Reef', color: '#48b0a0', stroke: '#188070' },
+  // Settlements
+  village: { name: 'Village', color: '#c0b8a8', stroke: '#908868' },
+  town: { name: 'Town', color: '#9a9284', stroke: '#6a6250' },
+  city: { name: 'City', color: '#746e62', stroke: '#484438' },
+  metropolis: { name: 'Metropolis', color: '#4e4a42', stroke: '#262420' },
+  riverside_village: { name: 'Riverside Village', color: '#b0bcc8', stroke: '#808c98' },
+  riverside_town: { name: 'Riverside Town', color: '#8c98a6', stroke: '#5c6874' },
+  riverside_city: { name: 'Riverside City', color: '#687482', stroke: '#3c4854' },
+  riverside_metropolis: { name: 'Riverside Metropolis', color: '#44505e', stroke: '#20282e' },
+  // Rivers
+  headwater: { name: 'Headwater', color: '#70c8c0', stroke: '#389890' },
+  braided_river: { name: 'Braided River', color: '#68a8d8', stroke: '#3878a8' },
+  waterfall: { name: 'Waterfall', color: '#d0ecf8', stroke: '#88c4e0' },
+  delta: { name: 'Delta', color: '#5aa0b8', stroke: '#287088' },
+  // Specials
+  volcano: { name: 'Volcano', color: '#c03020', stroke: '#801008' },
+  atoll: { name: 'Atoll', color: '#48c8c0', stroke: '#189890' },
+  slough: { name: 'Slough', color: '#607a58', stroke: '#304a30' },
+  sky_cliffs: { name: 'Sky Cliffs', color: '#c8d4ec', stroke: '#90a0c8' },
+  cloudlands: { name: 'Cloudlands', color: '#e8ecf4', stroke: '#b0b8cc' },
+  lava_flow: { name: 'Lava Flow', color: '#e06020', stroke: '#a03008' },
+  solid_earth: { name: 'Solid Earth', color: '#584838', stroke: '#382818' },
+  // Post-conversions
+  mudflats: { name: 'Mudflats', color: '#a08a68', stroke: '#706040' },
+  morraine: { name: 'Morraine', color: '#b8b8a8', stroke: '#888878' },
+  barrier_islands: { name: 'Barrier Islands', color: '#e0d498', stroke: '#b0a060' },
+  sea_stacks: { name: 'Sea Stacks', color: '#788898', stroke: '#485868' },
+  lagoon: { name: 'Lagoon', color: '#58c0d8', stroke: '#2890a8' },
+  pass: { name: 'Pass', color: '#b0a898', stroke: '#807868' },
+  dunes: { name: 'Dunes', color: '#e8d8a0', stroke: '#b8a868' },
+  old_growth: { name: 'Old-growth', color: '#2a5a40', stroke: '#123a24' },
+  mangrove_thicket: { name: 'Mangrove Thicket', color: '#3a7058', stroke: '#184834' },
+  farmland: { name: 'Farmland', color: '#b8c858', stroke: '#889828' },
+  // Underdark set
+  ice_caverns: { name: 'Ice Caverns', color: '#405068', stroke: '#203048' },
+  underground_sea: { name: 'Underground Sea', color: '#182850', stroke: '#081838' },
+  crystal_hollows: { name: 'Crystal Hollows', color: '#584878', stroke: '#302850' },
+  fungal_jungle: { name: 'Fungal Jungle', color: '#4a3860', stroke: '#281848' },
+  lava_tubes: { name: 'Lava Tubes', color: '#502018', stroke: '#300808' },
+  chasm: { name: 'Chasm', color: '#282830', stroke: '#101018' },
+  solutional_cave: { name: 'Solutional Cave', color: '#484038', stroke: '#282018' }
 }
 
 // Primary/secondary type selector buttons: name + representative fill color
