@@ -6,6 +6,7 @@
 // The type definitions live in src/types.ts (HexState, BiomeGrouping,
 // MapGenState, …) so components and the store can import them too.
 
+import { shuffle } from '../core/random'
 import type { BiomeGrouping, CoordinateModifier, MapGenState } from '../types'
 
 /** Returns a fresh, empty MapGenState. */
@@ -21,12 +22,14 @@ export function createState (): MapGenState {
 
 /** Builds the 4 biome groupings with their coordinate modifiers and hex shapes. */
 export function buildBiomeGroupings (): BiomeGrouping[] {
-  const configs: Array<[CoordinateModifier, number]> = [
-    [{ axis: 'x', offset: 0 }, 4],
-    [{ axis: 'x', offset: -2 }, 8],
-    [{ axis: 'y', offset: -2 }, 16],
-    [{ axis: 'y', offset: 0 }, 32]
-  ]
+  const bases = [4, 8, 16, 32]
+  const modifiers: CoordinateModifier[] = shuffle([
+    { axis: 'x', offset: 0 },
+    { axis: 'y', offset: -2 },
+    { axis: 'x', offset: 2 },
+    { axis: 'y', offset: 0 }
+  ])
+  const configs: Array<[CoordinateModifier, number]> = bases.map((base, i) => [modifiers[i], base])
   return configs.map(([coordinateModifier, base]) => ({
     coordinateModifier,
     primaryBiome: null,

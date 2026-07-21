@@ -1,7 +1,8 @@
 import { createState, buildBiomeGroupings } from './state'
-import { axialToOffset } from '../core/hexGrid'
+import { DIRECTIONS, axialToOffset } from '../core/hexGrid'
 import { pickOne, pickWeighted } from '../core/random'
 import {
+  GRASSLAND_HEX,
   SEA_HEX,
   SECONDARY_TYPES,
   WEIGHTED_PRIMARY_BIOMES,
@@ -66,15 +67,13 @@ export function placeBiomes (state, onStep) {
 
     for (let round = 0; round < ROUNDS; round++) {
       const hexShape = pickOne(grouping.hexShapes)
-      const { start, origin } = pickStartHex(state, grouping, lastHex, findStart)
+      const { start, bsd, origin } = pickStartHex(state, grouping, lastHex, findStart)
 
-      // randomFirstStep only applies when we rolled (not chaining from lastHex)
-      const randomFirstStep = origin.kind === 'rolled'
       const {
         placed,
         lastHex: newLastHex,
         firstDir
-      } = placeOneShape(state, grouping, hexShape, start, randomFirstStep)
+      } = placeOneShape(state, grouping, hexShape, start, bsd)
       lastHex = newLastHex ?? lastHex
       placedShapes++
 
@@ -100,20 +99,26 @@ export function placeBiomes (state, onStep) {
   return state
 }
 
-// First shape ever: roll. All subsequent shapes: try steps 1 → 2 → fall back to roll.
-// Returns { start, origin } where origin is one of:
+// Shape start per spec steps 43–45 & 54–56. Every shape rolls a
+// [Biome Shape Direction] (44). With an origin (previous shape's last hex, 54),
+// the first tile comes from findStartFromHex, which consumes the BSD (45), so
+// `bsd` returns null. Without an origin — or when every direction from it is
+// exhausted (56) — roll coordinates (43) plus a fresh BSD, which placeOneShape
+// consumes on the first adjacency placement.
+// Returns { start, bsd, origin } where origin is one of:
 //   { kind: 'rolled', rerolls } | { kind: 'adjacent', dir } | { kind: 'line', dir }
 function pickStartHex (state, grouping, lastHex, findStart) {
   if (lastHex) {
-    const found = findStartFromHex(state.hexes, lastHex)
+    const bsd = pickOne(DIRECTIONS)
+    const found = findStartFromHex(state.hexes, lastHex, bsd)
     if (found) {
       const kind = found.step === 1 ? 'adjacent' : 'line'
-      return { start: found.hex, origin: { kind, dir: found.hex.dir } }
+      return { start: found.hex, bsd: null, origin: { kind, dir: found.hex.dir } }
     }
   }
 
   const { start, rerolls } = findStart(grouping)
-  return { start, origin: { kind: 'rolled', rerolls } }
+  return { start, bsd: pickOne(DIRECTIONS), origin: { kind: 'rolled', rerolls } }
 }
 
 function originTextOf (origin) {
@@ -149,15 +154,33 @@ function formatPlacementStep ({
 
 // =============================================================================
 // PHASE 3 — POST-PLACEMENT CLEANUP
-// Covers steps: 0H, 0I, 0J, 0K
+// Covers step: 58
 // =============================================================================
 
-export function cleanupBiomes (state) {
+// Unassigned fill (58). Blanks become Sea only when some grouping rolled Sea as
+// its [Primary Biome]; on a map with no sea at all they become Grassland
+// instead, so the leftovers read as interior land rather than a phantom ocean.
+export function cleanupBiomes (state, onStep) {
+  const hadSeaPrimary = state.biomeGroupings.some(g => g.primaryBiome === 'sea')
+  const fill = hadSeaPrimary ? SEA_HEX : GRASSLAND_HEX
+
+  let filled = 0
   for (const key of Object.keys(state.hexes)) {
     if (state.hexes[key] === null) {
-      state.hexes[key] = { ...SEA_HEX }
+      state.hexes[key] = { ...fill }
+      filled++
     }
   }
+
+  onStep?.({
+    label: `Fill unassigned hexes with ${fill.biome}`,
+    description:
+      `${filled} hex${filled === 1 ? '' : 'es'} were left unassigned after ` +
+      `placement. ${hadSeaPrimary
+        ? 'At least one grouping rolled a Sea primary biome, so they become sea.'
+        : 'No grouping rolled a Sea primary biome, so they become grassland.'}`,
+    state
+  })
 
   return state
 }

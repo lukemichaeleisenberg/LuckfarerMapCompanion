@@ -22,8 +22,8 @@ export const STEPS = [
   },
   {
     id: 'cleanupBiomes',
-    label: 'Fill empty hexes with sea',
-    description: 'Any hex still unassigned after biome placement becomes sea.',
+    label: 'Fill unassigned hexes',
+    description: 'Any hex still unassigned after biome placement becomes sea, or grassland if no grouping rolled a sea primary biome.',
     fn: cleanupBiomes
   },
   {

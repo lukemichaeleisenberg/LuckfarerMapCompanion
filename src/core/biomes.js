@@ -41,7 +41,6 @@ export const WEIGHTED_PRIMARY_BIOMES = [
   'grassland',
   'mountain',
   'swamp',
-  'swamp',
   'sea',
   'sea',
   'sea',
@@ -62,8 +61,9 @@ export const BIOME_LOOKUP = {
     grassland: 'tundra',
     mountain: 'glacier',
     swamp: 'fens',
-    hill: 'arctic_hill',
-    wasteland: 'wasteland'
+    hill: 'snowy_hills',
+    wasteland: 'wasteland',
+    underdark: 'ice_caverns'
   },
   coast: {
     arctic: 'floes',
@@ -73,8 +73,9 @@ export const BIOME_LOOKUP = {
     grassland: 'chaparral',
     mountain: 'fjords',
     swamp: 'bayou',
-    hill: 'coast_hill',
-    wasteland: 'wasteland'
+    hill: 'sea_cliffs',
+    wasteland: 'wasteland',
+    underdark: 'underground_sea'
   },
   desert: {
     arctic: 'ice_sheet',
@@ -83,9 +84,10 @@ export const BIOME_LOOKUP = {
     forest: 'savanna',
     grassland: 'shrubland',
     mountain: 'mesa',
-    swamp: 'oasis',
-    hill: 'desert_hill',
-    wasteland: 'wasteland'
+    swamp: 'salt_pans',
+    hill: 'plateau',
+    wasteland: 'wasteland',
+    underdark: 'crystal_hollows'
   },
   forest: {
     arctic: 'taiga',
@@ -96,7 +98,8 @@ export const BIOME_LOOKUP = {
     mountain: 'alpine_forest',
     swamp: 'rainforest',
     hill: 'forest_hill',
-    wasteland: 'wasteland'
+    wasteland: 'wasteland',
+    underdark: 'fungal_jungle'
   },
   grassland: {
     arctic: 'tundra',
@@ -106,8 +109,9 @@ export const BIOME_LOOKUP = {
     grassland: 'grassland',
     mountain: 'steppe',
     swamp: 'marsh',
-    hill: 'grassland_hill',
-    wasteland: 'wasteland'
+    hill: 'rolling_hills',
+    wasteland: 'wasteland',
+    underdark: 'lava_tubes'
   },
   mountain: {
     arctic: 'glacier',
@@ -117,30 +121,33 @@ export const BIOME_LOOKUP = {
     grassland: 'steppe',
     mountain: 'mountain',
     swamp: 'cloud_forest',
-    hill: 'mountain_hill',
-    wasteland: 'wasteland'
+    hill: 'highlands',
+    wasteland: 'wasteland',
+    underdark: 'chasm'
   },
   swamp: {
     arctic: 'fens',
     coast: 'bayou',
-    desert: 'oasis',
+    desert: 'salt_pans',
     forest: 'rainforest',
     grassland: 'marsh',
     mountain: 'cloud_forest',
     swamp: 'swamp',
-    hill: 'swamp_hill',
-    wasteland: 'wasteland'
+    hill: 'geyser_basin',
+    wasteland: 'wasteland',
+    underdark: 'solutional_cave'
   },
   sea: {
     arctic: 'sea',
     coast: 'sea',
     desert: 'sea',
-    forest: 'sea',
+    forest: 'kelp_forest',
     grassland: 'sea',
     mountain: 'sea',
-    swamp: 'sea',
+    swamp: 'reef',
     hill: 'sea',
-    wasteland: 'sea'
+    wasteland: 'sea',
+    underdark: 'underground_sea'
   }
 }
 
@@ -182,14 +189,8 @@ export const BIOME_CATALOG = {
   marsh: { name: 'Marsh', color: '#78a858', stroke: '#407830' },
   // Mountain blends
   cloud_forest: { name: 'Cloud Forest', color: '#5a7858', stroke: '#284838' },
-  // Hill variants
-  arctic_hill: { name: 'Arctic Hill', color: '#c0d8e8', stroke: '#88b0c8' },
-  coast_hill: { name: 'Coast Hill', color: '#5098b0', stroke: '#206888' },
-  desert_hill: { name: 'Desert Hill', color: '#c8906a', stroke: '#a06040' },
+  // Forest hill (named hill for the Forest × Hill cell)
   forest_hill: { name: 'Forest Hill', color: '#7d9440', stroke: '#50661c' },
-  grassland_hill: { name: 'Grassland Hill', color: '#90b860', stroke: '#608838' },
-  mountain_hill: { name: 'Mountain Hill', color: '#707878', stroke: '#404848' },
-  swamp_hill: { name: 'Swamp Hill', color: '#508060', stroke: '#204830' },
   // Wasteland
   wasteland: { name: 'Wasteland', color: '#a08060', stroke: '#705840' },
   // Other
@@ -199,8 +200,8 @@ export const BIOME_CATALOG = {
   shallow_river: { name: 'Shallow River', color: '#80c0d8', stroke: '#4890a8' },
   rapids: { name: 'Rapids', color: '#b0e0f0', stroke: '#78c0d8' },
   underdark: { name: 'Underdark', color: '#1e1028', stroke: '#0a0818' },
-  // Named hills (replace the generic *_hill keys once Phase 1 swaps the
-  // matrix hill row; forest_hill above is already the named form)
+  // Named hills for the Hill row of the combined matrix (forest_hill above is
+  // the Forest × Hill form)
   snowy_hills: { name: 'Snowy Hills', color: '#d0e0e8', stroke: '#98b8c8' },
   sea_cliffs: { name: 'Sea Cliffs', color: '#6090a8', stroke: '#306078' },
   plateau: { name: 'Plateau', color: '#c89060', stroke: '#986030' },
@@ -269,16 +270,17 @@ export const TYPE_CATALOG = {
 }
 
 // ─── Logic ───────────────────────────────────────────────────────────────────
-// Canonical empty-water hex. Hexes are mutated in place, so spread-copy at use
-// sites rather than sharing this object.
+// Canonical fill hexes for unassigned space (step 58). Hexes are mutated in
+// place, so spread-copy at use sites rather than sharing these objects.
 export const SEA_HEX = { biome: 'sea' }
+export const GRASSLAND_HEX = { biome: 'grassland' }
 
 export function combineBiomes (primary, secondary) {
   return BIOME_LOOKUP[primary]?.[secondary] ?? 'sea'
 }
 
 // Derive the secondary + combined biome for a shape, applying special rules:
-//   - The first shape in a mountain grouping is always hill (yields mountain_hill).
+//   - The first shape in a mountain grouping is always hill (yields highlands).
 //   - A shape immediately following a mountain-secondary shape becomes hill.
 // `rolledSecondary` is the random pre-roll the caller already made.
 export function deriveSecondaryBiome ({ primaryBiome, rolledSecondary, isFirstShape, prevSecondary }) {
