@@ -80,8 +80,7 @@ export function placeBiomes (state, onStep) {
       onStep?.({
         ...formatPlacementStep({
           g,
-          totalGroups: state.biomeGroupings.length,
-          grouping,
+          round,
           hexShape,
           placed,
           placedShapes,
@@ -131,7 +130,7 @@ function originTextOf (origin) {
 }
 
 function formatPlacementStep ({
-  g, totalGroups, grouping, hexShape,
+  g, round, hexShape,
   placed, placedShapes, totalShapes,
   start, newLastHex, firstDir, origin
 }) {
@@ -144,7 +143,7 @@ function formatPlacementStep ({
   return {
     label: `Place ${hexShape.shape}: ${hexShape.combinedBiome}`,
     description:
-      `Group ${g + 1} of ${totalGroups} (${grouping.primaryBiome}). ` +
+      `Group ${g + 1}, shape ${round + 1} (${hexShape.shape}, ${hexShape.combinedBiome}). ` +
       `${originTextOf(origin)}. Placed ${placed} ${hexShape.combinedBiome} hexes ` +
       `as a ${hexShape.shape} starting from ${startText}${continuedText}, ` +
       `ending at ${endText}. ` +
