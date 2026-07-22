@@ -2,6 +2,7 @@ import { createState, buildBiomeGroupings } from './state'
 import { DIRECTIONS, axialToOffset } from '../core/hexGrid'
 import { pickOne, pickWeighted } from '../core/random'
 import {
+  BIOME_CATALOG,
   GRASSLAND_HEX,
   SEA_HEX,
   SECONDARY_TYPES,
@@ -139,12 +140,13 @@ function formatPlacementStep ({
   const startText = startOff ? `(${startOff.col}, ${startOff.row})` : 'no valid start'
   const endText = endOff ? `(${endOff.col}, ${endOff.row})` : startText
   const continuedText = firstDir ? ` and continued ${firstDir}` : ''
+  const biomeName = BIOME_CATALOG[hexShape.combinedBiome]?.name ?? hexShape.combinedBiome
 
   return {
-    label: `Place ${hexShape.shape}: ${hexShape.combinedBiome}`,
+    label: `Place ${hexShape.shape}: ${biomeName}`,
     description:
-      `Group ${g + 1}, shape ${round + 1} (${hexShape.shape}, ${hexShape.combinedBiome}). ` +
-      `${originTextOf(origin)}. Placed ${placed} ${hexShape.combinedBiome} hexes ` +
+      `Group ${g + 1}, shape ${round + 1} (${hexShape.shape}, ${biomeName}). ` +
+      `${originTextOf(origin)}. Placed ${placed} ${biomeName} hexes ` +
       `as a ${hexShape.shape} starting from ${startText}${continuedText}, ` +
       `ending at ${endText}. ` +
       `Shape ${placedShapes} of ${totalShapes}.`
