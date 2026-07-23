@@ -8,19 +8,42 @@ import {
   SECONDARY_TYPES,
   WEIGHTED_PRIMARY_BIOMES,
   deriveSecondaryBiome
-} from '../core/biomes.js'
+} from '../core/biomes'
 import {
   placeOneShape,
   rollStartingHex,
   findStartFromHex
-} from './biomePlacement.js'
+} from './biomePlacement'
+import type {
+  Axial,
+  BiomeGrouping,
+  Direction,
+  HexMap,
+  HexShape,
+  MapGenState
+} from '../types'
+
+// Snapshot payload each step hands back for the step-by-step viewer.
+export interface StepSnapshot {
+  label: string
+  description: string
+  state: MapGenState
+}
+
+export type OnStep = (snapshot: StepSnapshot) => void
+
+type ShapeOrigin =
+  | { kind: 'rolled', rerolls: number }
+  | { kind: 'adjacent' | 'line', dir: Direction }
+
+type FindStart = ReturnType<typeof rollStartingHex>
 
 // =============================================================================
 // PHASE 1 — SETUP
 // Covers steps: 0A, 0B, 0C, 0D, 0E, 0F
 // =============================================================================
 
-export function setupGrid (existingHexMap) {
+export function setupGrid (existingHexMap: HexMap): MapGenState {
   const state = createState()
 
   for (const key of Object.keys(existingHexMap)) {
@@ -29,7 +52,7 @@ export function setupGrid (existingHexMap) {
 
   state.biomeGroupings = buildBiomeGroupings()
 
-  let prevShape = null
+  let prevShape: HexShape | null = null
   for (const grouping of state.biomeGroupings) {
     grouping.primaryBiome = pickWeighted(WEIGHTED_PRIMARY_BIOMES)
 
@@ -57,11 +80,11 @@ export function setupGrid (existingHexMap) {
 
 const ROUNDS = 10
 
-export function placeBiomes (state, onStep) {
+export function placeBiomes (state: MapGenState, onStep?: OnStep): MapGenState {
   const findStart = rollStartingHex(state)
   const totalShapes = state.biomeGroupings.length * ROUNDS
   let placedShapes = 0
-  let lastHex = null
+  let lastHex: Axial | null = null
 
   for (let g = 0; g < state.biomeGroupings.length; g++) {
     const grouping = state.biomeGroupings[g]
@@ -105,9 +128,12 @@ export function placeBiomes (state, onStep) {
 // `bsd` returns null. Without an origin — or when every direction from it is
 // exhausted (56) — roll coordinates (43) plus a fresh BSD, which placeOneShape
 // consumes on the first adjacency placement.
-// Returns { start, bsd, origin } where origin is one of:
-//   { kind: 'rolled', rerolls } | { kind: 'adjacent', dir } | { kind: 'line', dir }
-function pickStartHex (state, grouping, lastHex, findStart) {
+function pickStartHex (
+  state: MapGenState,
+  grouping: BiomeGrouping,
+  lastHex: Axial | null,
+  findStart: FindStart
+): { start: Axial | null, bsd: Direction | null, origin: ShapeOrigin } {
   if (lastHex) {
     const bsd = pickOne(DIRECTIONS)
     const found = findStartFromHex(state.hexes, lastHex, bsd)
@@ -121,7 +147,7 @@ function pickStartHex (state, grouping, lastHex, findStart) {
   return { start, bsd: pickOne(DIRECTIONS), origin: { kind: 'rolled', rerolls } }
 }
 
-function originTextOf (origin) {
+function originTextOf (origin: ShapeOrigin): string {
   switch (origin.kind) {
     case 'adjacent': return `Adjacent ${origin.dir}`
     case 'line': return `Line ${origin.dir}`
@@ -130,17 +156,31 @@ function originTextOf (origin) {
   }
 }
 
+interface PlacementStepInfo {
+  g: number
+  round: number
+  hexShape: HexShape
+  placed: number
+  placedShapes: number
+  totalShapes: number
+  start: Axial | null
+  newLastHex: Axial | null
+  firstDir?: Direction | null
+  origin: ShapeOrigin
+}
+
 function formatPlacementStep ({
   g, round, hexShape,
   placed, placedShapes, totalShapes,
   start, newLastHex, firstDir, origin
-}) {
+}: PlacementStepInfo): { label: string, description: string } {
   const startOff = start ? axialToOffset(start) : null
   const endOff = newLastHex ? axialToOffset(newLastHex) : null
   const startText = startOff ? `(${startOff.col}, ${startOff.row})` : 'no valid start'
   const endText = endOff ? `(${endOff.col}, ${endOff.row})` : startText
   const continuedText = firstDir ? ` and continued ${firstDir}` : ''
-  const biomeName = BIOME_CATALOG[hexShape.combinedBiome]?.name ?? hexShape.combinedBiome
+  const biomeKey = hexShape.combinedBiome ?? ''
+  const biomeName = BIOME_CATALOG[biomeKey]?.name ?? biomeKey
 
   return {
     label: `Place ${hexShape.shape}: ${biomeName}`,
@@ -161,7 +201,7 @@ function formatPlacementStep ({
 // Unassigned fill (58). Blanks become Sea only when some grouping rolled Sea as
 // its [Primary Biome]; on a map with no sea at all they become Grassland
 // instead, so the leftovers read as interior land rather than a phantom ocean.
-export function cleanupBiomes (state, onStep) {
+export function cleanupBiomes (state: MapGenState, onStep?: OnStep): MapGenState {
   const hadSeaPrimary = state.biomeGroupings.some(g => g.primaryBiome === 'sea')
   const fill = hadSeaPrimary ? SEA_HEX : GRASSLAND_HEX
 
@@ -193,7 +233,7 @@ export function cleanupBiomes (state, onStep) {
 // it is not a separate pass and is handled inline within the 0N block below.
 // =============================================================================
 
-export function placeFeatures (state) {
+export function placeFeatures (state: MapGenState): MapGenState {
   return state
 }
 
@@ -202,6 +242,6 @@ export function placeFeatures (state) {
 // Covers step: 0P
 // =============================================================================
 
-export function cleanupFeatures (state) {
+export function cleanupFeatures (state: MapGenState): MapGenState {
   return state
 }

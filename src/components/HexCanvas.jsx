@@ -1,7 +1,7 @@
 import { useMemo, useState, useRef, useEffect } from 'react'
 import { Stage, Layer, RegularPolygon } from 'react-konva'
 import { buildGrid, HEX_X_RADIUS, HEX_Y_RADIUS, HEX_SIZE, keyOf } from '../core/hexGrid'
-import { BIOME_CATALOG } from '../core/biomes.js'
+import { BIOME_CATALOG } from '../core/biomes'
 
 export default function HexCanvas({ hexMap, onHexClick }) {
   const grid  = useMemo(() => buildGrid(), [])

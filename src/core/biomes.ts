@@ -1,5 +1,13 @@
+import type { HexState } from '../types'
+
+export interface BiomeStyle {
+  name: string
+  color: string
+  stroke: string
+}
+
 // ─── Type lists ───────────────────────────────────────────────────────────────
-export const PRIMARY_TYPES = [
+export const PRIMARY_TYPES: string[] = [
   'arctic',
   'coast',
   'desert',
@@ -9,7 +17,7 @@ export const PRIMARY_TYPES = [
   'swamp',
   'sea'
 ]
-export const SECONDARY_TYPES = [
+export const SECONDARY_TYPES: string[] = [
   'arctic',
   'coast',
   'desert',
@@ -20,7 +28,7 @@ export const SECONDARY_TYPES = [
   'hill',
   'wasteland'
 ]
-export const OTHER_TYPES = [
+export const OTHER_TYPES: string[] = [
   'lake',
   'urban',
   'navigable_river',
@@ -29,7 +37,7 @@ export const OTHER_TYPES = [
   'underdark'
 ]
 
-export const WEIGHTED_PRIMARY_BIOMES = [
+export const WEIGHTED_PRIMARY_BIOMES: string[] = [
   'arctic',
   'coast',
   'desert',
@@ -52,7 +60,7 @@ export const WEIGHTED_PRIMARY_BIOMES = [
 ]
 
 // ─── Lookup matrix: BIOME_LOOKUP[primary][secondary] → biome key ──────────────
-export const BIOME_LOOKUP = {
+export const BIOME_LOOKUP: Record<string, Record<string, string>> = {
   arctic: {
     arctic: 'arctic',
     coast: 'floes',
@@ -152,7 +160,7 @@ export const BIOME_LOOKUP = {
 }
 
 // ─── Catalogs: key → { name, color, stroke } ──────────────────────────────────
-export const BIOME_CATALOG = {
+export const BIOME_CATALOG: Record<string, BiomeStyle> = {
   // Pure primaries
   arctic: { name: 'Arctic', color: '#ddeeff', stroke: '#aaccee' },
   coast: { name: 'Coast', color: '#3bb8cc', stroke: '#1f8899' },
@@ -256,7 +264,7 @@ export const BIOME_CATALOG = {
 }
 
 // Primary/secondary type selector buttons: name + representative fill color
-export const TYPE_CATALOG = {
+export const TYPE_CATALOG: Record<string, { name: string, color: string }> = {
   arctic: { name: 'Arctic', color: '#ddeeff' },
   coast: { name: 'Coast', color: '#3bb8cc' },
   desert: { name: 'Desert', color: '#d4b483' },
@@ -272,10 +280,11 @@ export const TYPE_CATALOG = {
 // ─── Logic ───────────────────────────────────────────────────────────────────
 // Canonical fill hexes for unassigned space (step 58). Hexes are mutated in
 // place, so spread-copy at use sites rather than sharing these objects.
-export const SEA_HEX = { biome: 'sea' }
-export const GRASSLAND_HEX = { biome: 'grassland' }
+export const SEA_HEX: HexState = { biome: 'sea' }
+export const GRASSLAND_HEX: HexState = { biome: 'grassland' }
 
-export function combineBiomes (primary, secondary) {
+export function combineBiomes (primary: string | null, secondary: string | null): string {
+  if (!primary || !secondary) return 'sea'
   return BIOME_LOOKUP[primary]?.[secondary] ?? 'sea'
 }
 
@@ -283,7 +292,12 @@ export function combineBiomes (primary, secondary) {
 //   - The first shape in a mountain grouping is always hill (yields highlands).
 //   - A shape immediately following a mountain-secondary shape becomes hill.
 // `rolledSecondary` is the random pre-roll the caller already made.
-export function deriveSecondaryBiome ({ primaryBiome, rolledSecondary, isFirstShape, prevSecondary }) {
+export function deriveSecondaryBiome ({ primaryBiome, rolledSecondary, isFirstShape, prevSecondary }: {
+  primaryBiome: string | null
+  rolledSecondary: string
+  isFirstShape: boolean
+  prevSecondary?: string | null
+}): { secondary: string, combined: string } {
   let secondary = rolledSecondary
   if (isFirstShape && primaryBiome === 'mountain') secondary = 'hill'
   if (prevSecondary === 'mountain') secondary = 'hill'

@@ -1,4 +1,4 @@
-import { BIOME_CATALOG } from '../core/biomes.js'
+import { BIOME_CATALOG } from '../core/biomes'
 
 export default function Header({ activeBiome }) {
 

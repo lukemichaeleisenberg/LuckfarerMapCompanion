@@ -1,17 +1,34 @@
 import { create } from 'zustand'
 import { buildGrid, keyOf } from '../core/hexGrid'
-import { SEA_HEX } from '../core/biomes.js'
-import { generateMap } from '../generator/generateMap.js'
+import { SEA_HEX } from '../core/biomes'
+import { generateMap, type GenerationSnapshot } from '../generator/generateMap'
+import type { HexMap, HexState, MapGenState } from '../types'
 
-function initHexMap () {
-  const m = {}
+export interface MapStore {
+  hexMap: HexMap
+  generatorState: MapGenState | null
+  snapshots: GenerationSnapshot[]
+  currentStep: number
+  seed: string | null
+
+  setHex: (key: string, hexState: HexState | null) => void
+  resetMap: () => void
+  runGeneration: (seed?: string | number | null) => void
+  goToStep: (index: number) => void
+  stepForward: () => void
+  stepBackward: () => void
+  loadGeneration: (snapshots: GenerationSnapshot[], seed?: string | null) => void
+}
+
+function initHexMap (): HexMap {
+  const m: HexMap = {}
   for (const hex of buildGrid()) {
     m[keyOf(hex.q, hex.r)] = { ...SEA_HEX }
   }
   return m
 }
 
-export const useMapStore = create((set, get) => ({
+export const useMapStore = create<MapStore>()((set, get) => ({
   hexMap: initHexMap(),
   generatorState: null,
   snapshots: [],

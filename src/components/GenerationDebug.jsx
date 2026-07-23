@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useMapStore } from '../store/mapStore.js'
+import { useMapStore } from '../store/mapStore'
 
 const EXPORT_FORMAT_VERSION = 2  // v1 = pre-Phase-0 hex shape { mode, primary, secondary }
 

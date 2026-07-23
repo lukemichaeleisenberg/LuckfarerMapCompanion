@@ -9,19 +9,49 @@ import {
   countNeighbors
 } from '../core/hexGrid'
 import { rollD } from '../core/random'
+import type {
+  Axial,
+  BiomeGrouping,
+  CoordinateModifier,
+  Direction,
+  HexMap,
+  HexShape,
+  HexState,
+  MapGenState,
+  ShapeRecord
+} from '../types'
+
+type Neighbor = Axial & { dir: Direction }
+
+export interface PlacementResult {
+  placed: number
+  lastHex: Axial | null
+  firstDir: Direction | null
+}
+
+export interface FoundStart {
+  hex: Neighbor
+  step: 1 | 2
+}
 
 // Spec step 45: the [Biome Shape Direction] is consumed by the shape's first
 // adjacency placement. Callers pass `bsd` only when that placement happens
 // here (rolled starts); chained starts consume it in findStartFromHex.
-export function placeOneShape (state, grouping, hexShape, start, bsd = null) {
-  if (!start) return { placed: 0, lastHex: null }
+export function placeOneShape (
+  state: MapGenState,
+  grouping: BiomeGrouping,
+  hexShape: HexShape,
+  start: Axial | null,
+  bsd: Direction | null = null
+): PlacementResult {
+  if (!start) return { placed: 0, lastHex: null, firstDir: null }
 
-  const biome = hexShape.combinedBiome
+  const biome = hexShape.combinedBiome!
   const shape = registerShape(state, grouping, hexShape, start)
   writeHex(state, start, biome, shape)
-  let previous = start
+  let previous: Axial = start
   let placed = 1
-  let firstDir = null
+  let firstDir: Direction | null = null
 
   for (; placed < hexShape.count; placed++) {
     const candidates = emptyNeighbors(state.hexes, previous.q, previous.r)
@@ -47,7 +77,7 @@ export function placeOneShape (state, grouping, hexShape, start, bsd = null) {
 //    line and proceeding clockwise from the BSD, taking the closest empty hex.
 // Returns null if every direction is exhausted (caller rerolls coordinates
 // and a fresh BSD per step 56).
-export function findStartFromHex (hexes, lastHex, bsd) {
+export function findStartFromHex (hexes: HexMap, lastHex: Axial, bsd: Direction): FoundStart | null {
   const adjacent = filterNeighbors(hexes, lastHex.q, lastHex.r, isEmptyHex)
   for (const dir of directionPriority(bsd)) {
     const found = adjacent.find(a => a.dir === dir)
@@ -62,8 +92,8 @@ export function findStartFromHex (hexes, lastHex, bsd) {
   return null
 }
 
-export function rollStartingHex (state) {
-  return grouping => {
+export function rollStartingHex (state: MapGenState) {
+  return (grouping: BiomeGrouping): { start: Axial | null, rerolls: number } => {
     let rerolls = 0
     while (true) {
       const rolled = rollCoordinate(grouping.coordinateModifier)
@@ -77,14 +107,14 @@ export function rollStartingHex (state) {
 }
 
 // In our hex map: undefined = off-grid, null = empty, object = occupied.
-const isEmptyHex = hex => hex === null
-const onGrid = (hexes, q, r) =>
+const isEmptyHex = (hex: HexState | null | undefined): boolean => hex === null
+const onGrid = (hexes: HexMap, q: number, r: number): boolean =>
   Object.prototype.hasOwnProperty.call(hexes, keyOf(q, r))
-const isEmpty = (hexes, q, r) =>
+const isEmpty = (hexes: HexMap, q: number, r: number): boolean =>
   onGrid(hexes, q, r) && hexes[keyOf(q, r)] === null
 
-function registerShape (state, grouping, hexShape, origin) {
-  const shape = {
+function registerShape (state: MapGenState, grouping: BiomeGrouping, hexShape: HexShape, origin: Axial): ShapeRecord {
+  const shape: ShapeRecord = {
     id: state.nextShapeId++,
     kind: hexShape.shape,
     groupingIndex: state.biomeGroupings.indexOf(grouping),
@@ -95,13 +125,13 @@ function registerShape (state, grouping, hexShape, origin) {
   return shape
 }
 
-function writeHex (state, { q, r }, biome, shape) {
+function writeHex (state: MapGenState, { q, r }: Axial, biome: string, shape: ShapeRecord): void {
   const key = keyOf(q, r)
   state.hexes[key] = { biome, shapeId: shape.id }
   shape.hexKeys.push(key)
 }
 
-function rollCoordinate (coordinateModifier) {
+function rollCoordinate (coordinateModifier: CoordinateModifier): Axial {
   let x = rollD(GRID_COLS)
   let y = rollD(GRID_ROWS)
   if (coordinateModifier.axis === 'x') x += coordinateModifier.offset
@@ -109,11 +139,11 @@ function rollCoordinate (coordinateModifier) {
   return offsetToAxial(x, y)
 }
 
-export function emptyNeighbors (hexes, q, r) {
+export function emptyNeighbors (hexes: HexMap, q: number, r: number): Neighbor[] {
   return filterNeighbors(hexes, q, r, isEmptyHex)
 }
 
-function firstEmptyAlong (hexes, from, dir) {
+function firstEmptyAlong (hexes: HexMap, from: Axial, dir: Direction): Axial | null {
   let cur = { ...from }
   while (true) {
     cur = step(cur.q, cur.r, dir)
@@ -122,7 +152,9 @@ function firstEmptyAlong (hexes, from, dir) {
   }
 }
 
-function strategyFor (shape, indexPlaced, totalCount) {
+type Strategy = 'max' | 'min'
+
+function strategyFor (shape: HexShape['shape'], indexPlaced: number, totalCount: number): Strategy {
   if (shape === 'clump') return 'max'
   if (shape === 'belt') return 'min'
   return indexPlaced < Math.ceil(totalCount / 2) ? 'max' : 'min'
@@ -131,20 +163,26 @@ function strategyFor (shape, indexPlaced, totalCount) {
 // DIRECTIONS is already clockwise starting at NE, so the spec's
 // "NE second, clockwise from NE third" is the array in order; a live BSD
 // takes top priority (step 52).
-function directionPriority (bsd) {
+function directionPriority (bsd: Direction | null): readonly Direction[] {
   return bsd ? [bsd, ...DIRECTIONS.filter(d => d !== bsd)] : DIRECTIONS
 }
 
-function clockwiseFrom (dir) {
+function clockwiseFrom (dir: Direction): Direction[] {
   const i = DIRECTIONS.indexOf(dir)
   return i <= 0 ? [...DIRECTIONS] : [...DIRECTIONS.slice(i), ...DIRECTIONS.slice(0, i)]
 }
 
-function sameBiomeNeighborCount (hexes, q, r, biome) {
+function sameBiomeNeighborCount (hexes: HexMap, q: number, r: number, biome: string): number {
   return countNeighbors(hexes, q, r, h => h?.biome === biome)
 }
 
-function pickByStrategy (hexes, candidates, biome, strategy, priority = DIRECTIONS) {
+function pickByStrategy (
+  hexes: HexMap,
+  candidates: Neighbor[],
+  biome: string,
+  strategy: Strategy,
+  priority: readonly Direction[] = DIRECTIONS
+): Neighbor {
   const scored = candidates.map(c => ({
     ...c,
     score: sameBiomeNeighborCount(hexes, c.q, c.r, biome)
