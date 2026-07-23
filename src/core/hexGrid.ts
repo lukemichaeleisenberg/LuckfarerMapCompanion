@@ -15,6 +15,8 @@ export const PointyHex = defineHex({
   origin: 'topLeft'
 })
 
+export type GridHex = InstanceType<typeof PointyHex>
+
 export function buildGrid () {
   return new Grid(PointyHex, rectangle({ width: GRID_COLS, height: GRID_ROWS }))
 }

@@ -9,7 +9,7 @@ import { defineConfig, globalIgnores } from 'eslint/config'
 export default defineConfig([
   globalIgnores(['dist']),
   {
-    files: ['**/*.{js,jsx,ts,tsx}'],
+    files: ['**/*.{js,ts,tsx}'],
     extends: [
       js.configs.recommended,
       react.configs.flat.recommended,
@@ -19,15 +19,6 @@ export default defineConfig([
     ],
     settings: {
       react: { version: 'detect' }
-    },
-    languageOptions: {
-      ecmaVersion: 2020,
-      globals: globals.browser,
-      parserOptions: {
-        ecmaVersion: 'latest',
-        ecmaFeatures: { jsx: true },
-        sourceType: 'module'
-      }
     },
     rules: {
       // ── Logic ──────────────────────────────────────────────────────────────
@@ -51,8 +42,31 @@ export default defineConfig([
     }
   },
   {
+    files: ['src/**/*.{ts,tsx}'],
+    languageOptions: {
+      globals: globals.browser
+    }
+  },
+  {
+    // Root-level config files run in Node, not the browser.
+    files: ['*.{js,ts}'],
+    languageOptions: {
+      globals: globals.node
+    }
+  },
+  {
     files: ['**/*.{ts,tsx}'],
-    extends: [tseslint.configs.recommended],
+    extends: [tseslint.configs.recommendedTypeChecked],
+    languageOptions: {
+      parserOptions: {
+        // vite.config.ts lives in tsconfig.node.json, which the project
+        // service doesn't discover; lint it against the default project.
+        projectService: {
+          allowDefaultProject: ['vite.config.ts']
+        },
+        tsconfigRootDir: import.meta.dirname
+      }
+    },
     rules: {
       // The TS-aware rule replaces the base one (which false-positives on
       // things like type parameters).

@@ -1,14 +1,15 @@
 // ─── Shared UI primitives used by toolbar panels ──────────────────────────────
+import type { ReactNode } from 'react'
 
 // eslint-disable-next-line react-refresh/only-export-components -- one consumer doesn't justify a util module yet
-export function isLight(hex) {
+export function isLight(hex: string): boolean {
   const r = parseInt(hex.slice(1, 3), 16)
   const g = parseInt(hex.slice(3, 5), 16)
   const b = parseInt(hex.slice(5, 7), 16)
   return (r * 299 + g * 587 + b * 114) / 1000 > 150
 }
 
-export function Section({ label, children }) {
+export function Section({ label, children }: { label: string, children: ReactNode }) {
   return (
     <div>
       <div className="section-label">{label}</div>
@@ -17,7 +18,14 @@ export function Section({ label, children }) {
   )
 }
 
-export function TypeGrid({ types, active, onSelect, catalog }) {
+interface TypeGridProps {
+  types: string[]
+  active: string | null
+  onSelect: (type: string) => void
+  catalog: Record<string, { name: string, color: string }>
+}
+
+export function TypeGrid({ types, active, onSelect, catalog }: TypeGridProps) {
   return (
     <div className="type-grid">
       {types.map(t => {

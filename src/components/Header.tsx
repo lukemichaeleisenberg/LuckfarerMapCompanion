@@ -1,6 +1,6 @@
 import { BIOME_CATALOG } from '../core/biomes'
 
-export default function Header({ activeBiome }) {
+export default function Header({ activeBiome }: { activeBiome: string }) {
 
   return (
     <div className="header">

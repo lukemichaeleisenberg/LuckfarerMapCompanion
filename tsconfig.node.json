@@ -1,12 +1,13 @@
 {
+  /* Node-environment files (Vite config). The main tsconfig is browser-flavored
+     (DOM lib, src only), so config files get their own program. */
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "lib": ["ES2022"],
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "jsx": "react-jsx",
+    "types": ["node"],
 
-    /* Vite handles transpilation; tsc is type-check only. */
     "noEmit": true,
 
     "strict": true,
@@ -19,5 +20,5 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["src"]
+  "include": ["vite.config.ts"]
 }

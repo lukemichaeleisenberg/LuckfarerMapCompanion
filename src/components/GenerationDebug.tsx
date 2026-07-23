@@ -1,7 +1,15 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 import { useMapStore } from '../store/mapStore'
+import type { GenerationSnapshot } from '../generator/generateMap'
 
 const EXPORT_FORMAT_VERSION = 2  // v1 = pre-Phase-0 hex shape { mode, primary, secondary }
+
+interface ExportFile {
+  version: number
+  exportedAt: string
+  seed: string | null
+  snapshots: GenerationSnapshot[]
+}
 
 export default function GenerationDebug() {
   const generatorState   = useMapStore(s => s.generatorState)
@@ -14,11 +22,11 @@ export default function GenerationDebug() {
   const loadGeneration   = useMapStore(s => s.loadGeneration)
   const seed             = useMapStore(s => s.seed)
 
-  const [openSections, setOpenSections] = useState({ biomeGroupings: true, hexes: false })
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({ biomeGroupings: true, hexes: false })
   const [debugEnabled, setDebugEnabled] = useState(false)
-  const [importError, setImportError] = useState(null)
+  const [importError, setImportError] = useState<string | null>(null)
   const [seedInput, setSeedInput] = useState('')
-  const fileInputRef = useRef(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // After a generation, reflect the actual seed used (a blank input gets a
   // random one) back into the input.
@@ -46,15 +54,15 @@ export default function GenerationDebug() {
     URL.revokeObjectURL(url)
   }
 
-  function handleImportFile(e) {
-    const file = e.target.files[0]
+  function handleImportFile(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
     e.target.value = ''
     if (!file) return
     setImportError(null)
     const reader = new FileReader()
-    reader.onload = (ev) => {
+    reader.onload = () => {
       try {
-        const data = JSON.parse(ev.target.result)
+        const data = JSON.parse(reader.result as string) as Partial<ExportFile>
         if (data.version !== EXPORT_FORMAT_VERSION) {
           throw new Error(`Unsupported version ${data.version}: hex format changed in v${EXPORT_FORMAT_VERSION} — re-export from a current build`)
         }
@@ -64,13 +72,13 @@ export default function GenerationDebug() {
         loadGeneration(data.snapshots, data.seed ?? null)
         setDebugEnabled(true)
       } catch (err) {
-        setImportError(err.message)
+        setImportError(err instanceof Error ? err.message : String(err))
       }
     }
     reader.readAsText(file)
   }
 
-  function toggle(key) {
+  function toggle(key: string) {
     setOpenSections(prev => ({ ...prev, [key]: !prev[key] }))
   }
 
@@ -121,7 +129,7 @@ export default function GenerationDebug() {
             </button>
             <button
               className="gen-debug-btn gen-debug-btn--setup"
-              onClick={() => fileInputRef.current.click()}
+              onClick={() => fileInputRef.current?.click()}
             >
               Import JSON
             </button>
@@ -141,7 +149,7 @@ export default function GenerationDebug() {
         )}
       </div>
 
-      {debugEnabled && hasSnapshots && (
+      {debugEnabled && activeSnap && (
         <div className="gen-debug-stepper">
           <div className="gen-debug-stepper-col">
             <button
