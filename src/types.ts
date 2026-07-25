@@ -60,12 +60,17 @@ export interface HexShape {
   combinedBiome: string | null    // resolved BIOME_LOOKUP result (or null pre-setup)
   count: number                   // target hex count for this shape
   shape: ShapeKind
+  copyPrevious?: boolean          // 4th slot: takes the previously placed
+                                  // shape's biome at placement time; setup
+                                  // leaves its biomes null
 }
 
 export interface BiomeGrouping {
   coordinateModifier: CoordinateModifier
   primaryBiome: string | null      // e.g. 'arctic', 'sea' (null pre-setup)
-  hexShapes: HexShape[]            // 4 shapes: clump, tendril, belt, clump (final clump = base+1)
+  hexShapes: HexShape[]            // 4 slots — clump, tendril, belt, copy-clump —
+                                   // that the 10 placement rounds draw from
+                                   // randomly; specials may override a kind
 }
 
 // Identity and membership of one placed shape, so later steps can operate on

@@ -37,7 +37,7 @@ export function buildBiomeGroupings (): BiomeGrouping[] {
       makeShape('clump', base),
       makeShape('tendril', base),
       makeShape('belt', base),
-      makeShape('clump', base + 1)
+      { ...makeShape('clump', base + 1), copyPrevious: true }
     ]
   }))
 }

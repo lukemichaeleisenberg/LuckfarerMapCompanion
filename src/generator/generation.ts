@@ -113,38 +113,61 @@ const SPECIAL_BIOME_ROLLS: SpecialBiomeRoll[] = [
   { pct: 10, biome: 'slough', shapeOverride: 'belt', nextSecondary: 'swamp' }
 ]
 
-// Special-biome pre-seeding (18–23). Each roll that hits claims the first
-// shape slot (in grouping order) with no [Combined Biome] yet, then applies
-// its side effects: a shape-type override on that slot, a forced Sea primary
-// on the slot's grouping (atoll, 22), or a preset secondary/combined biome on
-// the slot that follows — crossing grouping boundaries, matching step 27's
-// cross-grouping precedent. Returns descriptions of the applied specials.
+// Special-biome pre-seeding (18–23): roll each special in sheet order and
+// apply the ones that hit. Returns descriptions of the applied specials.
 function preSeedSpecialBiomes (state: MapGenState): string[] {
-  const slots = state.biomeGroupings.flatMap((grouping, groupingIndex) =>
-    grouping.hexShapes.map(shape => ({ grouping, groupingIndex, shape })))
   const applied: string[] = []
-
   for (const roll of SPECIAL_BIOME_ROLLS) {
     if (!chance(roll.pct)) continue
-    const i = slots.findIndex(s => s.shape.combinedBiome === null)
-    if (i === -1) break
-
-    const { grouping, groupingIndex, shape } = slots[i]
-    shape.combinedBiome = roll.biome
-    if (roll.shapeOverride) {
-      shape.shape = roll.shapeOverride
-      if (roll.shapeOverride === 'single') shape.count = 1
-    }
-    if (roll.primaryOverride) grouping.primaryBiome = roll.primaryOverride
-
-    const next = slots[i + 1]
-    if (next && roll.nextSecondary) next.shape.secondaryBiome = roll.nextSecondary
-    if (next && roll.nextCombined) next.shape.combinedBiome = roll.nextCombined
-
+    const groupingIndex = applySpecialBiome(state, roll)
+    if (groupingIndex === null) continue
     applied.push(`${BIOME_CATALOG[roll.biome].name} in grouping ${groupingIndex + 1}`)
   }
-
   return applied
+}
+
+interface BiomeSlot {
+  grouping: BiomeGrouping
+  groupingIndex: number
+  shape: HexShape
+}
+
+// The shape slots able to hold a rolled [Combined Biome], in grouping order.
+// Copy-clumps have no biome slots of their own and are excluded, so specials
+// never claim them and "the next [Shape Type]" skips past them.
+function biomeSlots (state: MapGenState): BiomeSlot[] {
+  return state.biomeGroupings.flatMap((grouping, groupingIndex) =>
+    grouping.hexShapes
+      .filter(shape => !shape.copyPrevious)
+      .map(shape => ({ grouping, groupingIndex, shape })))
+}
+
+// A special that hit its roll claims the first slot with no [Combined Biome]
+// yet, then applies its side effects:
+//   - the slot's shape type may become Single Hex or Belt (20–23);
+//   - atoll (22) forces Sea as the claimed slot's grouping [Primary Biome];
+//   - volcano, lava_flow, and slough (20/21/23) preset a secondary or
+//     combined biome on the slot that follows, crossing grouping boundaries
+//     like the step 27 mountain→hill chain.
+// Returns the claimed slot's grouping index, or null if no slot was free.
+function applySpecialBiome (state: MapGenState, roll: SpecialBiomeRoll): number | null {
+  const slots = biomeSlots(state)
+  const index = slots.findIndex(slot => slot.shape.combinedBiome === null)
+  if (index === -1) return null
+
+  const { grouping, groupingIndex, shape } = slots[index]
+  shape.combinedBiome = roll.biome
+  if (roll.shapeOverride) {
+    shape.shape = roll.shapeOverride
+    if (roll.shapeOverride === 'single') shape.count = 1
+  }
+  if (roll.primaryOverride) grouping.primaryBiome = roll.primaryOverride
+
+  const next = slots[index + 1]?.shape
+  if (next && roll.nextSecondary) next.secondaryBiome = roll.nextSecondary
+  if (next && roll.nextCombined) next.combinedBiome = roll.nextCombined
+
+  return groupingIndex
 }
 
 // Matrix resolution (24–28): weighted primaries for groupings without one
@@ -162,7 +185,7 @@ function resolveBiomeMatrix (state: MapGenState): void {
   let prevSecondary: string | null = null
   for (const grouping of state.biomeGroupings) {
     grouping.hexShapes.forEach((shape, idx) => {
-      if (shape.combinedBiome !== null) {
+      if (shape.copyPrevious || shape.combinedBiome !== null) {
         prevSecondary = shape.secondaryBiome
         return
       }
@@ -198,14 +221,28 @@ function applyLatitudeConversions (state: MapGenState): string[] {
 
   for (const grouping of state.biomeGroupings) {
     for (const shape of grouping.hexShapes) {
-      const biome = shape.combinedBiome
-      if (biome === 'ice_sheet' && notPolar) convert(shape, 'dunes')
-      else if (biome === 'floes' && notPolar) convert(shape, 'lagoon')
-      else if (biome === 'fens' && notPolar) convert(shape, 'lagoon')
-      else if (biome === 'rainforest' && notEquatorial) convert(shape, 'old_growth')
-      else if ((biome === 'bayou' || biome === 'chaparral') && mangrove) convert(shape, 'mangrove_thicket')
-      else if (biome === 'taiga' && equatorial) convert(shape, 'rainforest')
-      else if (biome === 'tundra' && equatorial) convert(shape, 'grassland')
+      switch (shape.combinedBiome) {
+        case 'ice_sheet':
+          if (notPolar) convert(shape, 'dunes')
+          break
+        case 'floes':
+        case 'fens':
+          if (notPolar) convert(shape, 'lagoon')
+          break
+        case 'rainforest':
+          if (notEquatorial) convert(shape, 'old_growth')
+          break
+        case 'bayou':
+        case 'chaparral':
+          if (mangrove) convert(shape, 'mangrove_thicket')
+          break
+        case 'taiga':
+          if (equatorial) convert(shape, 'rainforest')
+          break
+        case 'tundra':
+          if (equatorial) convert(shape, 'grassland')
+          break
+      }
     }
   }
 
@@ -233,6 +270,13 @@ function applyShapeTypeOverrides (state: MapGenState): void {
 // Shape rules, tie-breaking, and fallback logic are helpers within this function.
 // =============================================================================
 
+// 10 shapes per grouping (steps 39–42), each drawn randomly from the
+// grouping's four shape slots — one clump, one tendril, one belt (kinds
+// possibly overridden by a special or steps 36–37), plus the copy-clump: a
+// clump one hex larger than the grouping's other shapes that takes the
+// previously placed shape's biome, even when that shape came from another
+// grouping. Drawing the copy-clump before anything has been placed falls
+// back to a draw among the other slots.
 const ROUNDS = 10
 
 export function placeBiomes (state: MapGenState, onStep?: OnStep): MapGenState {
@@ -240,12 +284,18 @@ export function placeBiomes (state: MapGenState, onStep?: OnStep): MapGenState {
   const totalShapes = state.biomeGroupings.length * ROUNDS
   let placedShapes = 0
   let lastHex: Axial | null = null
+  let prevBiome: string | null = null
 
   for (let g = 0; g < state.biomeGroupings.length; g++) {
     const grouping = state.biomeGroupings[g]
 
     for (let round = 0; round < ROUNDS; round++) {
-      const hexShape = pickOne(grouping.hexShapes)
+      let hexShape = pickOne(grouping.hexShapes)
+      if (hexShape.copyPrevious) {
+        hexShape = prevBiome
+          ? { ...hexShape, combinedBiome: prevBiome }
+          : pickOne(grouping.hexShapes.filter(s => !s.copyPrevious))
+      }
       const { start, bsd, origin } = pickStartHex(state, grouping, lastHex, findStart)
 
       const {
@@ -255,6 +305,7 @@ export function placeBiomes (state: MapGenState, onStep?: OnStep): MapGenState {
       } = placeOneShape(state, grouping, hexShape, start, bsd)
       lastHex = newLastHex ?? lastHex
       placedShapes++
+      if (placed > 0) prevBiome = hexShape.combinedBiome
 
       onStep?.({
         ...formatPlacementStep({
