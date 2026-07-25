@@ -7,7 +7,7 @@
 // MapGenState, …) so components and the store can import them too.
 
 import { shuffle } from '../core/random'
-import type { BiomeGrouping, CoordinateModifier, MapGenState } from '../types'
+import type { BiomeGrouping, CoordinateModifier, GeneralShapeKind, HexShape, MapGenState } from '../types'
 
 /** Returns a fresh, empty MapGenState. */
 export function createState (): MapGenState {
@@ -34,30 +34,16 @@ export function buildBiomeGroupings (): BiomeGrouping[] {
     coordinateModifier,
     primaryBiome: null,
     hexShapes: [
-      {
-        secondaryBiome: null,
-        combinedBiome: null,
-        count: base,
-        shape: 'clump'
-      },
-      {
-        secondaryBiome: null,
-        combinedBiome: null,
-        count: base,
-        shape: 'tendril'
-      },
-      {
-        secondaryBiome: null,
-        combinedBiome: null,
-        count: base,
-        shape: 'belt'
-      },
-      {
-        secondaryBiome: null,
-        combinedBiome: null,
-        count: base + 1,
-        shape: 'clump'
-      }
+      makeShape('clump', base),
+      makeShape('tendril', base),
+      makeShape('belt', base),
+      makeShape('clump', base + 1)
     ]
   }))
+}
+
+// Restricted to GeneralShapeKind: 'single' is never a base shape — only the
+// special-biome and geyser_basin overrides may set it.
+function makeShape (shape: GeneralShapeKind, count: number): HexShape {
+  return { secondaryBiome: null, combinedBiome: null, count, shape }
 }

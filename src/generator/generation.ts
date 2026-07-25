@@ -1,6 +1,6 @@
 import { createState, buildBiomeGroupings } from './state'
 import { DIRECTIONS, axialToOffset } from '../core/hexGrid'
-import { pickOne, pickWeighted } from '../core/random'
+import { chance, pickOne, pickWeighted } from '../core/random'
 import {
   BIOME_CATALOG,
   GRASSLAND_HEX,
@@ -20,6 +20,7 @@ import type {
   Direction,
   HexMap,
   HexShape,
+  Latitude,
   MapGenState
 } from '../types'
 
@@ -40,10 +41,14 @@ type FindStart = ReturnType<typeof rollStartingHex>
 
 // =============================================================================
 // PHASE 1 — SETUP
-// Covers steps: 0A, 0B, 0C, 0D, 0E, 0F
+// Covers spec steps 2–37: grid + groupings (2–7), latitude (8), special-biome
+// pre-seeding (18–23), matrix resolution (24–28), latitude conversions
+// (29–35), and shape-type overrides (36–37).
 // =============================================================================
 
-export function setupGrid (existingHexMap: HexMap): MapGenState {
+const LATITUDES: Latitude[] = ['equatorial', 'temperate', 'polar']
+
+export function setupGrid (existingHexMap: HexMap, onStep?: OnStep): MapGenState {
   const state = createState()
 
   for (const key of Object.keys(existingHexMap)) {
@@ -52,24 +57,174 @@ export function setupGrid (existingHexMap: HexMap): MapGenState {
 
   state.biomeGroupings = buildBiomeGroupings()
 
-  let prevShape: HexShape | null = null
-  for (const grouping of state.biomeGroupings) {
-    grouping.primaryBiome = pickWeighted(WEIGHTED_PRIMARY_BIOMES)
+  // Latitude roll (8): gates the biome substitutions in steps 29–35.
+  state.latitude = pickOne(LATITUDES)
+  onStep?.({
+    label: 'Roll latitude',
+    description:
+      `Built the grid and 4 biome groupings, and rolled a ${state.latitude} ` +
+      'latitude for the region.',
+    state
+  })
 
-    grouping.hexShapes.forEach((hexShape, idx) => {
-      const { secondary, combined } = deriveSecondaryBiome({
-        primaryBiome: grouping.primaryBiome,
-        rolledSecondary: pickOne(SECONDARY_TYPES),
-        isFirstShape: idx === 0,
-        prevSecondary: prevShape?.secondaryBiome
-      })
-      hexShape.secondaryBiome = secondary
-      hexShape.combinedBiome = combined
-      prevShape = hexShape
-    })
-  }
+  const specials = preSeedSpecialBiomes(state)
+  onStep?.({
+    label: 'Pre-seed special biomes',
+    description: specials.length > 0
+      ? `Special biome rolls (steps 18–23) hit: ${specials.join('; ')}.`
+      : 'No special biome rolls (steps 18–23) hit.',
+    state
+  })
+
+  resolveBiomeMatrix(state)
+  const conversions = applyLatitudeConversions(state)
+  applyShapeTypeOverrides(state)
+  onStep?.({
+    label: 'Resolve biome matrix',
+    description:
+      `Primary biomes: ${state.biomeGroupings
+        .map(g => BIOME_CATALOG[g.primaryBiome ?? '']?.name ?? g.primaryBiome)
+        .join(', ')}. ` +
+      (conversions.length > 0
+        ? `Latitude (${state.latitude}) conversions: ${conversions.join(', ')}.`
+        : `No latitude (${state.latitude}) conversions applied.`),
+    state
+  })
 
   return state
+}
+
+interface SpecialBiomeRoll {
+  pct: number
+  biome: string
+  shapeOverride?: 'single' | 'belt'
+  primaryOverride?: string
+  nextSecondary?: string
+  nextCombined?: string
+}
+
+// Steps 18–23, in sheet order. Each entry rolls once per generation.
+const SPECIAL_BIOME_ROLLS: SpecialBiomeRoll[] = [
+  { pct: 1, biome: 'sky_cliffs' },
+  { pct: 1, biome: 'cloudlands' },
+  { pct: 5, biome: 'volcano', shapeOverride: 'single', nextSecondary: 'hill' },
+  { pct: 5, biome: 'lava_flow', shapeOverride: 'single', nextCombined: 'sea' },
+  { pct: 5, biome: 'atoll', shapeOverride: 'single', primaryOverride: 'sea' },
+  { pct: 10, biome: 'slough', shapeOverride: 'belt', nextSecondary: 'swamp' }
+]
+
+// Special-biome pre-seeding (18–23). Each roll that hits claims the first
+// shape slot (in grouping order) with no [Combined Biome] yet, then applies
+// its side effects: a shape-type override on that slot, a forced Sea primary
+// on the slot's grouping (atoll, 22), or a preset secondary/combined biome on
+// the slot that follows — crossing grouping boundaries, matching step 27's
+// cross-grouping precedent. Returns descriptions of the applied specials.
+function preSeedSpecialBiomes (state: MapGenState): string[] {
+  const slots = state.biomeGroupings.flatMap((grouping, groupingIndex) =>
+    grouping.hexShapes.map(shape => ({ grouping, groupingIndex, shape })))
+  const applied: string[] = []
+
+  for (const roll of SPECIAL_BIOME_ROLLS) {
+    if (!chance(roll.pct)) continue
+    const i = slots.findIndex(s => s.shape.combinedBiome === null)
+    if (i === -1) break
+
+    const { grouping, groupingIndex, shape } = slots[i]
+    shape.combinedBiome = roll.biome
+    if (roll.shapeOverride) {
+      shape.shape = roll.shapeOverride
+      if (roll.shapeOverride === 'single') shape.count = 1
+    }
+    if (roll.primaryOverride) grouping.primaryBiome = roll.primaryOverride
+
+    const next = slots[i + 1]
+    if (next && roll.nextSecondary) next.shape.secondaryBiome = roll.nextSecondary
+    if (next && roll.nextCombined) next.shape.combinedBiome = roll.nextCombined
+
+    applied.push(`${BIOME_CATALOG[roll.biome].name} in grouping ${groupingIndex + 1}`)
+  }
+
+  return applied
+}
+
+// Matrix resolution (24–28): weighted primaries for groupings without one
+// (24, atoll may have forced Sea), then secondaries and combined biomes for
+// every slot not claimed by a special. Secondaries preset by volcano/slough
+// (20/23) skip the roll but still pass through the mountain→hill replacement
+// chain (26–27), which spans grouping boundaries.
+function resolveBiomeMatrix (state: MapGenState): void {
+  for (const grouping of state.biomeGroupings) {
+    if (grouping.primaryBiome === null) {
+      grouping.primaryBiome = pickWeighted(WEIGHTED_PRIMARY_BIOMES)
+    }
+  }
+
+  let prevSecondary: string | null = null
+  for (const grouping of state.biomeGroupings) {
+    grouping.hexShapes.forEach((shape, idx) => {
+      if (shape.combinedBiome !== null) {
+        prevSecondary = shape.secondaryBiome
+        return
+      }
+      const { secondary, combined } = deriveSecondaryBiome({
+        primaryBiome: grouping.primaryBiome,
+        rolledSecondary: shape.secondaryBiome ?? pickOne(SECONDARY_TYPES),
+        isFirstShape: idx === 0,
+        prevSecondary
+      })
+      shape.secondaryBiome = secondary
+      shape.combinedBiome = combined
+      prevSecondary = secondary
+    })
+  }
+}
+
+// Latitude conversions on rolled combined biomes (29–35). Step 33 is a single
+// 50% roll covering every Bayou and Chaparral slot at once. Returns "from →
+// to" descriptions of the applied conversions.
+function applyLatitudeConversions (state: MapGenState): string[] {
+  const latitude = state.latitude
+  const notPolar = latitude === 'temperate' || latitude === 'equatorial'
+  const notEquatorial = latitude === 'temperate' || latitude === 'polar'
+  const equatorial = latitude === 'equatorial'
+  const mangrove = equatorial && chance(50)
+  const changes: string[] = []
+
+  const convert = (shape: HexShape, to: string): void => {
+    const from = shape.combinedBiome ?? ''
+    changes.push(`${BIOME_CATALOG[from]?.name ?? from} → ${BIOME_CATALOG[to].name}`)
+    shape.combinedBiome = to
+  }
+
+  for (const grouping of state.biomeGroupings) {
+    for (const shape of grouping.hexShapes) {
+      const biome = shape.combinedBiome
+      if (biome === 'ice_sheet' && notPolar) convert(shape, 'dunes')
+      else if (biome === 'floes' && notPolar) convert(shape, 'lagoon')
+      else if (biome === 'fens' && notPolar) convert(shape, 'lagoon')
+      else if (biome === 'rainforest' && notEquatorial) convert(shape, 'old_growth')
+      else if ((biome === 'bayou' || biome === 'chaparral') && mangrove) convert(shape, 'mangrove_thicket')
+      else if (biome === 'taiga' && equatorial) convert(shape, 'rainforest')
+      else if (biome === 'tundra' && equatorial) convert(shape, 'grassland')
+    }
+  }
+
+  return changes
+}
+
+// Shape-type overrides (36–37): Geyser Basin always places as a single hex,
+// Sea Cliffs always as a belt.
+function applyShapeTypeOverrides (state: MapGenState): void {
+  for (const grouping of state.biomeGroupings) {
+    for (const shape of grouping.hexShapes) {
+      if (shape.combinedBiome === 'geyser_basin') {
+        shape.shape = 'single'
+        shape.count = 1
+      } else if (shape.combinedBiome === 'sea_cliffs') {
+        shape.shape = 'belt'
+      }
+    }
+  }
 }
 
 // =============================================================================

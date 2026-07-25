@@ -49,7 +49,11 @@ export interface CoordinateModifier {
   offset: number
 }
 
-export type ShapeKind = 'clump' | 'tendril' | 'belt'
+// General shape kinds assignable when building groupings. 'single' is never a
+// general shape: it is only forced by the specials that use it — volcano,
+// lava_flow, atoll (steps 20–22) and geyser_basin (step 36).
+export type GeneralShapeKind = 'clump' | 'tendril' | 'belt'
+export type ShapeKind = GeneralShapeKind | 'single'
 
 export interface HexShape {
   secondaryBiome: string | null   // rolled secondary type (or null pre-setup)

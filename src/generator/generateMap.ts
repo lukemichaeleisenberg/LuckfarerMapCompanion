@@ -13,7 +13,7 @@ import type { HexMap, MapGenState } from '../types'
 // MapGenState it returns. STEPS models that with a union, and generateMap's
 // loop widens the input at the single call site.
 type StepFn =
-  | ((existingHexMap: HexMap) => MapGenState)
+  | ((existingHexMap: HexMap, onStep?: OnStep) => MapGenState)
   | ((state: MapGenState, onStep?: OnStep) => MapGenState)
 
 export interface GenerationStep {
@@ -34,7 +34,7 @@ export const STEPS: GenerationStep[] = [
   {
     id: 'setup',
     label: 'Setup grid',
-    description: 'Initialize empty hex grid and roll biome groupings, primary and secondary biomes.',
+    description: 'Initialize the hex grid, roll latitude and special biomes, then resolve primary, secondary, and combined biomes with latitude conversions.',
     fn: setupGrid
   },
   {
