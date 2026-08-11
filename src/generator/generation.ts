@@ -71,8 +71,8 @@ export function setupGrid (existingHexMap: HexMap, onStep?: OnStep): MapGenState
   onStep?.({
     label: 'Pre-seed special biomes',
     description: specials.length > 0
-      ? `Special biome rolls (steps 18–23) hit: ${specials.join('; ')}.`
-      : 'No special biome rolls (steps 18–23) hit.',
+      ? `Special biome rolls hit: ${specials.join('; ')}.`
+      : 'No special biome rolls.',
     state
   })
 
@@ -142,14 +142,7 @@ function biomeSlots (state: MapGenState): BiomeSlot[] {
       .map(shape => ({ grouping, groupingIndex, shape })))
 }
 
-// A special that hit its roll claims the first slot with no [Combined Biome]
-// yet, then applies its side effects:
-//   - the slot's shape type may become Single Hex or Belt (20–23);
-//   - atoll (22) forces Sea as the claimed slot's grouping [Primary Biome];
-//   - volcano, lava_flow, and slough (20/21/23) preset a secondary or
-//     combined biome on the slot that follows, crossing grouping boundaries
-//     like the step 27 mountain→hill chain.
-// Returns the claimed slot's grouping index, or null if no slot was free.
+
 function applySpecialBiome (state: MapGenState, roll: SpecialBiomeRoll): number | null {
   const slots = biomeSlots(state)
   const index = slots.findIndex(slot => slot.shape.combinedBiome === null)
@@ -170,11 +163,6 @@ function applySpecialBiome (state: MapGenState, roll: SpecialBiomeRoll): number 
   return groupingIndex
 }
 
-// Matrix resolution (24–28): weighted primaries for groupings without one
-// (24, atoll may have forced Sea), then secondaries and combined biomes for
-// every slot not claimed by a special. Secondaries preset by volcano/slough
-// (20/23) skip the roll but still pass through the mountain→hill replacement
-// chain (26–27), which spans grouping boundaries.
 function resolveBiomeMatrix (state: MapGenState): void {
   for (const grouping of state.biomeGroupings) {
     if (grouping.primaryBiome === null) {
@@ -296,7 +284,7 @@ export function placeBiomes (state: MapGenState, onStep?: OnStep): MapGenState {
           ? { ...hexShape, combinedBiome: prevBiome }
           : pickOne(grouping.hexShapes.filter(s => !s.copyPrevious))
       }
-      const { start, bsd, origin } = pickStartHex(state, grouping, lastHex, findStart)
+      const { start, bsd, origin } = pickStartHex(state, grouping, hexShape, lastHex, findStart)
 
       const {
         placed,
@@ -328,21 +316,17 @@ export function placeBiomes (state: MapGenState, onStep?: OnStep): MapGenState {
   return state
 }
 
-// Shape start per spec steps 43–45 & 54–56. Every shape rolls a
-// [Biome Shape Direction] (44). With an origin (previous shape's last hex, 54),
-// the first tile comes from findStartFromHex, which consumes the BSD (45), so
-// `bsd` returns null. Without an origin — or when every direction from it is
-// exhausted (56) — roll coordinates (43) plus a fresh BSD, which placeOneShape
-// consumes on the first adjacency placement.
+// Shape start per spec steps 43–45 & 54–56.
 function pickStartHex (
   state: MapGenState,
   grouping: BiomeGrouping,
+  hexShape: HexShape,
   lastHex: Axial | null,
   findStart: FindStart
 ): { start: Axial | null, bsd: Direction | null, origin: ShapeOrigin } {
   if (lastHex) {
     const bsd = pickOne(DIRECTIONS)
-    const found = findStartFromHex(state.hexes, lastHex, bsd)
+    const found = findStartFromHex(state.hexes, lastHex, bsd, hexShape)
     if (found) {
       const kind = found.step === 1 ? 'adjacent' : 'line'
       return { start: found.hex, bsd: null, origin: { kind, dir: found.hex.dir } }

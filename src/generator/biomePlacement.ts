@@ -34,9 +34,10 @@ export interface FoundStart {
   step: 1 | 2
 }
 
-// Spec step 45: the [Biome Shape Direction] is consumed by the shape's first
-// adjacency placement. Callers pass `bsd` only when that placement happens
-// here (rolled starts); chained starts consume it in findStartFromHex.
+// Spec steps 44–45: the [Biome Shape Direction] lives only until the shape's
+// first adjacency placement — used if its hex is viable, unset otherwise.
+// Callers pass `bsd` only when that placement happens here (rolled starts);
+// chained starts consume it in findStartFromHex.
 export function placeOneShape (
   state: MapGenState,
   grouping: BiomeGrouping,
@@ -57,11 +58,14 @@ export function placeOneShape (
     const candidates = emptyNeighbors(state.hexes, previous.q, previous.r)
     if (candidates.length === 0) return { placed, lastHex: previous, firstDir }
 
-    // Spec step 52: Shape-Type adherence first, then direction priority
-    // (BSD on its first use only, then NE → clockwise from NE).
+    // Spec step 52: a live BSD is an absolute override — take its hex when
+    // viable; otherwise it is unset and the Shape-Type strategy picks,
+    // breaking ties NE → clockwise from NE.
     const strategy = strategyFor(hexShape.shape, placed, hexShape.count)
-    const priority = directionPriority(placed === 1 ? bsd : null)
-    const next = pickByStrategy(state.hexes, candidates, biome, strategy, priority)
+    const viaBsd = placed === 1 && bsd !== null
+      ? candidates.find(c => c.dir === bsd)
+      : undefined
+    const next = viaBsd ?? pickByStrategy(state.hexes, candidates, biome, strategy)
     if (placed === 1) firstDir = next.dir
 
     writeHex(state, next, biome, shape)
@@ -72,20 +76,29 @@ export function placeOneShape (
 }
 
 // Shape start from an existing origin (spec steps 52 & 55):
-// 1) first tile adjacent to the origin, chosen by BSD → NE → clockwise from NE;
+// 1) first tile adjacent to the origin — the BSD's hex if viable (absolute
+//    override), otherwise the BSD is unset and the Shape-Type strategy picks
+//    with the NE → clockwise tie-break;
 // 2) if no adjacent hex is empty, walk straight lines starting with the BSD's
 //    line and proceeding clockwise from the BSD, taking the closest empty hex.
 // Returns null if every direction is exhausted (caller rerolls coordinates
-// and a fresh BSD per step 56).
-export function findStartFromHex (hexes: HexMap, lastHex: Axial, bsd: Direction): FoundStart | null {
-  const adjacent = filterNeighbors(hexes, lastHex.q, lastHex.r, isEmptyHex)
-  for (const dir of directionPriority(bsd)) {
-    const found = adjacent.find(a => a.dir === dir)
-    if (found) return { hex: found, step: 1 }
+// and a fresh BSD per step 56 — the BSD never survives a failed start).
+export function findStartFromHex (
+  hexes: HexMap,
+  origin: Axial,
+  bsd: Direction,
+  hexShape: HexShape
+): FoundStart | null {
+  const candidates = filterNeighbors(hexes, origin.q, origin.r, isEmptyHex)
+  const viaBsd = candidates.find(c => c.dir === bsd)
+  if (viaBsd) return { hex: viaBsd, step: 1 }
+  if (candidates.length > 0) {
+    const strategy = strategyFor(hexShape.shape, 0, hexShape.count)
+    return { hex: pickByStrategy(hexes, candidates, hexShape.combinedBiome!, strategy), step: 1 }
   }
 
   for (const dir of clockwiseFrom(bsd)) {
-    const found = firstEmptyAlong(hexes, lastHex, dir)
+    const found = firstEmptyAlong(hexes, origin, dir)
     if (found) return { hex: { ...found, dir }, step: 2 }
   }
 
@@ -160,13 +173,6 @@ function strategyFor (shape: HexShape['shape'], indexPlaced: number, totalCount:
   return indexPlaced < Math.ceil(totalCount / 2) ? 'max' : 'min'
 }
 
-// DIRECTIONS is already clockwise starting at NE, so the spec's
-// "NE second, clockwise from NE third" is the array in order; a live BSD
-// takes top priority (step 52).
-function directionPriority (bsd: Direction | null): readonly Direction[] {
-  return bsd ? [bsd, ...DIRECTIONS.filter(d => d !== bsd)] : DIRECTIONS
-}
-
 function clockwiseFrom (dir: Direction): Direction[] {
   const i = DIRECTIONS.indexOf(dir)
   return i <= 0 ? [...DIRECTIONS] : [...DIRECTIONS.slice(i), ...DIRECTIONS.slice(0, i)]
@@ -176,12 +182,13 @@ function sameBiomeNeighborCount (hexes: HexMap, q: number, r: number, biome: str
   return countNeighbors(hexes, q, r, h => h?.biome === biome)
 }
 
+// DIRECTIONS is already clockwise starting at NE, so iterating it in order
+// implements the spec's NE → first-empty-clockwise-from-NE tie-break (step 52).
 function pickByStrategy (
   hexes: HexMap,
   candidates: Neighbor[],
   biome: string,
-  strategy: Strategy,
-  priority: readonly Direction[] = DIRECTIONS
+  strategy: Strategy
 ): Neighbor {
   const scored = candidates.map(c => ({
     ...c,
@@ -192,7 +199,7 @@ function pickByStrategy (
       ? Math.max(...scored.map(s => s.score))
       : Math.min(...scored.map(s => s.score))
   const tied = scored.filter(s => s.score === target)
-  for (const dir of priority) {
+  for (const dir of DIRECTIONS) {
     const match = tied.find(c => c.dir === dir)
     if (match) return match
   }
